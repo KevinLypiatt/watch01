@@ -1,4 +1,4 @@
-import { NavigationMenu } from "@/components/ui/navigation-menu";
+import { NavigationMenu } from "@/components/NavigationMenu";
 import { HeroSection } from "@/components/HeroSection";
 import { ProductShowcase } from "@/components/ProductShowcase";
 import { FeatureCard } from "@/components/FeatureCard";
@@ -9,12 +9,16 @@ const Index = () => {
   return (
     <div className="min-h-screen bg-soft-white">
       <NavigationMenu />
-      <HeroSection />
-      <section className="py-24 px-6">
+      <div className="pt-24 px-6">
         <div className="max-w-7xl mx-auto">
           <div className="mb-8 flex justify-center">
             <MigrationTrigger />
           </div>
+        </div>
+      </div>
+      <HeroSection />
+      <section className="py-24 px-6">
+        <div className="max-w-7xl mx-auto">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             {[
               {
