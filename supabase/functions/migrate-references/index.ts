@@ -38,31 +38,18 @@ Deno.serve(async (req) => {
 
     // Process each watch and create reference descriptions
     for (const watch of watches || []) {
-      const { data: existingRef, error: checkError } = await supabaseClient
+      const { error: insertError } = await supabaseClient
         .from('reference_descriptions')
-        .select('*')
-        .eq('reference_name', watch.model_reference)
-        .maybeSingle()
+        .insert({
+          brand: watch.brand,
+          reference_name: watch.model_reference
+        })
 
-      if (checkError) {
-        console.error('Error checking existing reference:', checkError)
+      if (insertError) {
+        console.error('Insert error for watch:', watch, insertError)
         continue
       }
-
-      if (!existingRef) {
-        const { error: insertError } = await supabaseClient
-          .from('reference_descriptions')
-          .insert({
-            brand: watch.brand,
-            reference_name: watch.model_reference
-          })
-
-        if (insertError) {
-          console.error('Insert error for watch:', watch, insertError)
-          continue
-        }
-        processedCount++
-      }
+      processedCount++
     }
 
     return new Response(
