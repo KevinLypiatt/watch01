@@ -1,18 +1,13 @@
 import { useState } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
-import { useNavigate } from "react-router-dom";
-import { Edit, Plus, ArrowUpDown } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
 import { PageHeader } from "@/components/PageHeader";
 import { useToast } from "@/hooks/use-toast";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Textarea } from "@/components/ui/textarea";
+import { ReferenceDescriptionHeader } from "@/components/reference-descriptions/ReferenceDescriptionHeader";
+import { ReferenceDescriptionFilters } from "@/components/reference-descriptions/ReferenceDescriptionFilters";
+import { ReferenceDescriptionTable } from "@/components/reference-descriptions/ReferenceDescriptionTable";
 
 const ReferenceDescriptions = () => {
-  const navigate = useNavigate();
   const { toast } = useToast();
   const [searchInput, setSearchInput] = useState("");
   const [brandInput, setBrandInput] = useState("");
@@ -45,7 +40,6 @@ const ReferenceDescriptions = () => {
         );
       }
       
-      // Default sorting by brand and then reference_name
       query = query.order('brand', { ascending: true }).order('reference_name', { ascending: true });
       
       if (sortColumn) {
@@ -150,6 +144,11 @@ const ReferenceDescriptions = () => {
     setReferenceFilter(referenceInput);
   };
 
+  const handleGenerateAll = () => {
+    setIsGenerating(true);
+    generateMutation.mutate();
+  };
+
   if (isLoading) {
     return <div className="flex items-center justify-center min-h-screen">Loading...</div>;
   }
@@ -158,148 +157,35 @@ const ReferenceDescriptions = () => {
     <div>
       <PageHeader />
       <div className="container mx-auto py-20">
-        <div className="flex justify-between items-center mb-6">
-          <h1 className="text-2xl font-bold">Reference Descriptions</h1>
-          <div className="space-x-4">
-            <Dialog open={isEditingPrompt} onOpenChange={setIsEditingPrompt}>
-              <DialogTrigger asChild>
-                <Button
-                  variant="outline"
-                  className="bg-[#f3f3f3] hover:bg-[#e5e5e5]"
-                >
-                  Edit System Prompt
-                </Button>
-              </DialogTrigger>
-              <DialogContent>
-                <DialogHeader>
-                  <DialogTitle>Edit System Prompt</DialogTitle>
-                </DialogHeader>
-                <Textarea
-                  value={systemPrompt}
-                  onChange={(e) => setSystemPrompt(e.target.value)}
-                  className="min-h-[200px]"
-                />
-                <Button onClick={handleSystemPromptSave}>Save Changes</Button>
-              </DialogContent>
-            </Dialog>
+        <ReferenceDescriptionHeader
+          isGenerating={isGenerating}
+          isEditingPrompt={isEditingPrompt}
+          isEditingGuide={isEditingGuide}
+          systemPrompt={systemPrompt}
+          styleGuide={styleGuide}
+          setIsEditingPrompt={setIsEditingPrompt}
+          setIsEditingGuide={setIsEditingGuide}
+          setSystemPrompt={setSystemPrompt}
+          setStyleGuide={setStyleGuide}
+          handleSystemPromptSave={handleSystemPromptSave}
+          handleStyleGuideSave={handleStyleGuideSave}
+          handleGenerateAll={handleGenerateAll}
+        />
 
-            <Dialog open={isEditingGuide} onOpenChange={setIsEditingGuide}>
-              <DialogTrigger asChild>
-                <Button
-                  variant="outline"
-                  className="bg-[#f3f3f3] hover:bg-[#e5e5e5]"
-                >
-                  Edit Reference Style Guide
-                </Button>
-              </DialogTrigger>
-              <DialogContent>
-                <DialogHeader>
-                  <DialogTitle>Edit Reference Style Guide</DialogTitle>
-                </DialogHeader>
-                <Textarea
-                  value={styleGuide}
-                  onChange={(e) => setStyleGuide(e.target.value)}
-                  className="min-h-[200px]"
-                />
-                <Button onClick={handleStyleGuideSave}>Save Changes</Button>
-              </DialogContent>
-            </Dialog>
+        <ReferenceDescriptionFilters
+          brandInput={brandInput}
+          referenceInput={referenceInput}
+          searchInput={searchInput}
+          setBrandInput={setBrandInput}
+          setReferenceInput={setReferenceInput}
+          setSearchInput={setSearchInput}
+          handleSearch={handleSearch}
+        />
 
-            <Button
-              variant="outline"
-              className="bg-[#f3f3f3] hover:bg-[#e5e5e5]"
-              onClick={handleGenerateAll}
-              disabled={isGenerating}
-            >
-              {isGenerating ? "Working..." : "Generate Reference Descriptions"}
-            </Button>
-            <Button onClick={() => navigate("/reference-descriptions/new")}>
-              <Plus className="mr-2 h-4 w-4" />
-              Add New Description
-            </Button>
-          </div>
-        </div>
-
-        <div className="space-y-4 mb-6">
-          <div className="flex gap-4">
-            <Input
-              placeholder="Filter by brand..."
-              value={brandInput}
-              onChange={(e) => setBrandInput(e.target.value)}
-              onKeyDown={(e) => e.key === "Enter" && handleSearch()}
-              className="max-w-xs"
-            />
-            <Input
-              placeholder="Filter by reference..."
-              value={referenceInput}
-              onChange={(e) => setReferenceInput(e.target.value)}
-              onKeyDown={(e) => e.key === "Enter" && handleSearch()}
-              className="max-w-xs"
-            />
-            <Input
-              placeholder="Search all fields..."
-              value={searchInput}
-              onChange={(e) => setSearchInput(e.target.value)}
-              onKeyDown={(e) => e.key === "Enter" && handleSearch()}
-              className="max-w-md"
-            />
-            <Button 
-              onClick={handleSearch}
-              variant="outline"
-              className="bg-[#f3f3f3] hover:bg-[#e5e5e5]"
-            >
-              Apply
-            </Button>
-          </div>
-        </div>
-
-        <div className="rounded-md border">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead onClick={() => handleSort('brand')} className="cursor-pointer hover:bg-muted/50">
-                  Brand
-                  <ArrowUpDown className="ml-2 h-4 w-4 inline" />
-                </TableHead>
-                <TableHead onClick={() => handleSort('reference_name')} className="cursor-pointer hover:bg-muted/50">
-                  Reference Name
-                  <ArrowUpDown className="ml-2 h-4 w-4 inline" />
-                </TableHead>
-                <TableHead onClick={() => handleSort('reference_description')} className="cursor-pointer hover:bg-muted/50">
-                  Description
-                  <ArrowUpDown className="ml-2 h-4 w-4 inline" />
-                </TableHead>
-                <TableHead className="w-[100px]">Actions</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {references && references.length > 0 ? (
-                references.map((reference) => (
-                  <TableRow key={reference.reference_id}>
-                    <TableCell>{reference.brand || "-"}</TableCell>
-                    <TableCell>{reference.reference_name || "-"}</TableCell>
-                    <TableCell>{reference.reference_description || "-"}</TableCell>
-                    <TableCell>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => navigate(`/reference-descriptions/${reference.reference_id}`)}
-                      >
-                        <Edit className="h-4 w-4" />
-                      </Button>
-                    </TableCell>
-                  </TableRow>
-                ))
-              ) : (
-                <TableRow>
-                  <TableCell colSpan={4} className="text-center py-4">
-                    No references found
-                  </TableCell>
-                </TableRow>
-              )}
-            </TableBody>
-          </Table>
-        </div>
+        <ReferenceDescriptionTable
+          references={references || []}
+          handleSort={handleSort}
+        />
       </div>
     </div>
   );
