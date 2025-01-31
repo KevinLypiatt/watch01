@@ -1,14 +1,13 @@
 import { useState } from "react";
-import { useQuery, useMutation } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { PageHeader } from "@/components/PageHeader";
-import { useToast } from "@/hooks/use-toast";
 import { ReferenceDescriptionHeader } from "@/components/reference-descriptions/ReferenceDescriptionHeader";
 import { ReferenceDescriptionFilters } from "@/components/reference-descriptions/ReferenceDescriptionFilters";
 import { ReferenceDescriptionTable } from "@/components/reference-descriptions/ReferenceDescriptionTable";
+import { useGenerateDescriptions } from "@/hooks/useGenerateDescriptions";
 
 const ReferenceDescriptions = () => {
-  const { toast } = useToast();
   const [searchInput, setSearchInput] = useState("");
   const [brandInput, setBrandInput] = useState("");
   const [referenceInput, setReferenceInput] = useState("");
@@ -17,11 +16,12 @@ const ReferenceDescriptions = () => {
   const [referenceFilter, setReferenceFilter] = useState("");
   const [sortColumn, setSortColumn] = useState<string>("brand");
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
-  const [isGenerating, setIsGenerating] = useState(false);
-  const [systemPrompt, setSystemPrompt] = useState("");
-  const [styleGuide, setStyleGuide] = useState("");
   const [isEditingPrompt, setIsEditingPrompt] = useState(false);
   const [isEditingGuide, setIsEditingGuide] = useState(false);
+  const [systemPrompt, setSystemPrompt] = useState("");
+  const [styleGuide, setStyleGuide] = useState("");
+
+  const generateMutation = useGenerateDescriptions();
 
   const { data: references, isLoading } = useQuery({
     queryKey: ["references", brandFilter, referenceFilter, searchTerm, sortColumn, sortDirection],
@@ -40,11 +40,7 @@ const ReferenceDescriptions = () => {
         );
       }
       
-      query = query.order('brand', { ascending: true }).order('reference_name', { ascending: true });
-      
-      if (sortColumn) {
-        query = query.order(sortColumn, { ascending: sortDirection === 'asc' });
-      }
+      query = query.order(sortColumn, { ascending: sortDirection === 'asc' });
 
       const { data, error } = await query;
       if (error) throw error;
@@ -61,7 +57,6 @@ const ReferenceDescriptions = () => {
         .in("id", [4, 5]);
       if (error) throw error;
       
-      // Set the content for system prompt (id: 5) and style guide (id: 4)
       const systemPromptGuide = data?.find(guide => guide.id === 5);
       const styleGuideContent = data?.find(guide => guide.id === 4);
       
@@ -71,46 +66,6 @@ const ReferenceDescriptions = () => {
       return data || [];
     },
   });
-
-  const updateStyleGuideMutation = useMutation({
-    mutationFn: async ({ id, content }: { id: number; content: string }) => {
-      const { error } = await supabase
-        .from("style_guides")
-        .update({ content })
-        .eq("id", id);
-      if (error) throw error;
-    },
-    onSuccess: () => {
-      toast({
-        title: "Success",
-        description: "Style guide updated successfully",
-      });
-      setIsEditingPrompt(false);
-      setIsEditingGuide(false);
-    },
-    onError: (error) => {
-      toast({
-        title: "Error",
-        description: "Failed to update style guide",
-        variant: "destructive",
-      });
-      console.error("Error updating style guide:", error);
-    },
-  });
-
-  const handleSystemPromptSave = () => {
-    updateStyleGuideMutation.mutate({
-      id: 5,
-      content: systemPrompt,
-    });
-  };
-
-  const handleStyleGuideSave = () => {
-    updateStyleGuideMutation.mutate({
-      id: 4,
-      content: styleGuide,
-    });
-  };
 
   const handleSort = (column: string) => {
     if (sortColumn === column) {
@@ -128,7 +83,6 @@ const ReferenceDescriptions = () => {
   };
 
   const handleGenerateAll = () => {
-    setIsGenerating(true);
     generateMutation.mutate();
   };
 
@@ -141,7 +95,7 @@ const ReferenceDescriptions = () => {
       <PageHeader />
       <div className="container mx-auto py-20">
         <ReferenceDescriptionHeader
-          isGenerating={isGenerating}
+          isGenerating={generateMutation.isPending}
           isEditingPrompt={isEditingPrompt}
           isEditingGuide={isEditingGuide}
           systemPrompt={systemPrompt}
