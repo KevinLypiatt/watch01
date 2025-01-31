@@ -21,38 +21,55 @@ Deno.serve(async (req) => {
       }
     )
 
-    // Get all watches
+    // Get all watches that have a model_reference
     const { data: watches, error: fetchError } = await supabaseClient
       .from('watches')
       .select('*')
+      .not('model_reference', 'is', null)
 
     if (fetchError) {
       console.error('Error fetching watches:', fetchError)
       throw fetchError
     }
 
-    console.log('Found watches:', watches?.length || 0)
+    console.log(`Found ${watches?.length || 0} watches with model references`)
 
-    // Create a reference description for each watch
+    let processedCount = 0
+
+    // Process each watch and create/update reference descriptions
     for (const watch of watches || []) {
-      const { error: insertError } = await supabaseClient
+      const { data: existingRef, error: checkError } = await supabaseClient
         .from('reference_descriptions')
-        .insert({
-          brand: watch.brand,
-          reference_name: watch.model_reference,
-          reference_description: null
-        })
+        .select('*')
+        .eq('reference_name', watch.model_reference)
+        .maybeSingle()
 
-      if (insertError) {
-        console.error('Insert error for watch:', watch, insertError)
-        throw insertError
+      if (checkError) {
+        console.error('Error checking existing reference:', checkError)
+        continue
+      }
+
+      if (!existingRef) {
+        const { error: insertError } = await supabaseClient
+          .from('reference_descriptions')
+          .insert({
+            brand: watch.brand,
+            reference_name: watch.model_reference,
+            reference_description: watch.description || null
+          })
+
+        if (insertError) {
+          console.error('Insert error for watch:', watch, insertError)
+          continue
+        }
+        processedCount++
       }
     }
 
     return new Response(
       JSON.stringify({
         message: 'Migration completed successfully',
-        count: watches?.length || 0
+        count: processedCount
       }),
       {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
