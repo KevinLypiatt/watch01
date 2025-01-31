@@ -16,7 +16,7 @@ const WatchList = () => {
       console.log("Fetching watches...");
       const { data, error } = await supabase
         .from("watches")
-        .select("brand, model_reference, model_name");
+        .select("*");  // Changed to select all columns
 
       if (error) {
         console.error("Error fetching watches:", error);
@@ -55,6 +55,10 @@ const WatchList = () => {
               <TableHead>Brand</TableHead>
               <TableHead>Model Reference</TableHead>
               <TableHead>Model Name</TableHead>
+              <TableHead>Case Material</TableHead>
+              <TableHead>Year</TableHead>
+              <TableHead>Movement Type</TableHead>
+              <TableHead>Condition</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -63,6 +67,10 @@ const WatchList = () => {
                 <TableCell>{watch.brand || "-"}</TableCell>
                 <TableCell>{watch.model_reference || "-"}</TableCell>
                 <TableCell>{watch.model_name || "-"}</TableCell>
+                <TableCell>{watch.case_material || "-"}</TableCell>
+                <TableCell>{watch.year || "-"}</TableCell>
+                <TableCell>{watch.movement_type || "-"}</TableCell>
+                <TableCell>{watch.condition || "-"}</TableCell>
               </TableRow>
             ))}
           </TableBody>
