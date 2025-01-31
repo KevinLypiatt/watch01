@@ -13,10 +13,13 @@ const EditReferenceDescription = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const isNewReference = !id;
 
   const { data: reference, isLoading } = useQuery({
     queryKey: ["reference", id],
     queryFn: async () => {
+      if (isNewReference) return null;
+      
       const { data, error } = await supabase
         .from("reference_descriptions")
         .select("*")
@@ -26,32 +29,43 @@ const EditReferenceDescription = () => {
       if (error) throw error;
       return data;
     },
+    enabled: !isNewReference, // Only run query if we're editing an existing reference
   });
 
   const mutation = useMutation({
     mutationFn: async (updatedReference: any) => {
-      const { error } = await supabase
-        .from("reference_descriptions")
-        .update(updatedReference)
-        .eq("reference_id", parseInt(id as string));
-
-      if (error) throw error;
+      if (isNewReference) {
+        const { error } = await supabase
+          .from("reference_descriptions")
+          .insert(updatedReference);
+        if (error) throw error;
+      } else {
+        const { error } = await supabase
+          .from("reference_descriptions")
+          .update(updatedReference)
+          .eq("reference_id", parseInt(id as string));
+        if (error) throw error;
+      }
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["reference", id] });
       toast({
         title: "Success",
-        description: "Reference description updated successfully",
+        description: isNewReference 
+          ? "Reference description created successfully"
+          : "Reference description updated successfully",
       });
       navigate("/reference-descriptions");
     },
     onError: (error) => {
       toast({
         title: "Error",
-        description: "Failed to update reference description",
+        description: isNewReference
+          ? "Failed to create reference description"
+          : "Failed to update reference description",
         variant: "destructive",
       });
-      console.error("Error updating reference:", error);
+      console.error("Error with reference:", error);
     },
   });
 
@@ -67,7 +81,7 @@ const EditReferenceDescription = () => {
     mutation.mutate(updatedReference);
   };
 
-  if (isLoading) {
+  if (isLoading && !isNewReference) {
     return <div>Loading...</div>;
   }
 
@@ -83,7 +97,9 @@ const EditReferenceDescription = () => {
           <ArrowLeft className="mr-2" />
           Back to References
         </Button>
-        <h1 className="text-2xl font-bold mb-6">Edit Reference Description</h1>
+        <h1 className="text-2xl font-bold mb-6">
+          {isNewReference ? "New Reference Description" : "Edit Reference Description"}
+        </h1>
         <form onSubmit={handleSubmit} className="space-y-6">
           <div>
             <label className="block text-sm font-medium mb-2">Brand</label>
@@ -109,7 +125,9 @@ const EditReferenceDescription = () => {
               className="w-full min-h-[200px]"
             />
           </div>
-          <Button type="submit">Save Changes</Button>
+          <Button type="submit">
+            {isNewReference ? "Create Reference" : "Save Changes"}
+          </Button>
         </form>
       </div>
     </div>
