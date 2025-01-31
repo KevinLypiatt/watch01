@@ -3,6 +3,7 @@ import { HeroSection } from "@/components/HeroSection";
 import { ProductShowcase } from "@/components/ProductShowcase";
 import { FeatureCard } from "@/components/FeatureCard";
 import { Footer } from "@/components/Footer";
+import { MigrationTrigger } from "@/components/MigrationTrigger";
 
 const Index = () => {
   return (
@@ -11,6 +12,9 @@ const Index = () => {
       <HeroSection />
       <section className="py-24 px-6">
         <div className="max-w-7xl mx-auto">
+          <div className="mb-8 flex justify-center">
+            <MigrationTrigger />
+          </div>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             {[
               {

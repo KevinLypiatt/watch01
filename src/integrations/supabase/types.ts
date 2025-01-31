@@ -9,6 +9,27 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      reference_descriptions: {
+        Row: {
+          brand: string | null
+          reference_description: string | null
+          reference_id: number
+          reference_name: string | null
+        }
+        Insert: {
+          brand?: string | null
+          reference_description?: string | null
+          reference_id?: number
+          reference_name?: string | null
+        }
+        Update: {
+          brand?: string | null
+          reference_description?: string | null
+          reference_id?: number
+          reference_name?: string | null
+        }
+        Relationships: []
+      }
       style_guides: {
         Row: {
           content: string
