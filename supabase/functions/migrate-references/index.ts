@@ -11,7 +11,6 @@ Deno.serve(async (req) => {
   }
 
   try {
-    // Create Supabase client
     const supabaseClient = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
       Deno.env.get('SUPABASE_ANON_KEY') ?? '',
@@ -22,24 +21,22 @@ Deno.serve(async (req) => {
       }
     )
 
-    // Get all watches with non-null brand and model_reference
+    // Get all watches
     const { data: watches, error: fetchError } = await supabaseClient
       .from('watches')
-      .select('brand, model_reference')
-      .not('brand', 'is', null)
-      .not('model_reference', 'is', null)
+      .select('*')
 
     if (fetchError) {
       console.error('Error fetching watches:', fetchError)
       throw fetchError
     }
 
-    console.log('Total watches found:', watches?.length || 0)
+    console.log('Found watches:', watches?.length || 0)
 
     if (!watches || watches.length === 0) {
       return new Response(
         JSON.stringify({
-          message: 'No watches found to migrate',
+          message: 'No watches found',
           count: 0
         }),
         {
