@@ -220,12 +220,16 @@ const NewWatch = () => {
             <Button
               type="button"
               onClick={() => handleStyleGuideEdit('watch_description_system_prompt')}
+              variant="outline"
+              className="bg-[#f3f3f3] hover:bg-[#e5e5e5]"
             >
               Edit System Prompt
             </Button>
             <Button
               type="button"
               onClick={() => handleStyleGuideEdit('watch_description_guide')}
+              variant="outline"
+              className="bg-[#f3f3f3] hover:bg-[#e5e5e5]"
             >
               Edit Style Guide
             </Button>
@@ -233,6 +237,8 @@ const NewWatch = () => {
               type="button"
               onClick={handleGenerateDescription}
               disabled={isGenerating}
+              variant="outline"
+              className="bg-[#f3f3f3] hover:bg-[#e5e5e5]"
             >
               {isGenerating ? (
                 <>

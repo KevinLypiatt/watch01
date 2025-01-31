@@ -29,7 +29,7 @@ const EditReferenceDescription = () => {
       if (error) throw error;
       return data;
     },
-    enabled: !isNewReference, // Only run query if we're editing an existing reference
+    enabled: !isNewReference,
   });
 
   const mutation = useMutation({
@@ -37,7 +37,7 @@ const EditReferenceDescription = () => {
       if (isNewReference) {
         const { error } = await supabase
           .from("reference_descriptions")
-          .insert(updatedReference);
+          .insert([updatedReference]);
         if (error) throw error;
       } else {
         const { error } = await supabase
