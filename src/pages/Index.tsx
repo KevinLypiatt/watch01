@@ -20,7 +20,7 @@ const Index = () => {
         .from("style_guides")
         .select("content")
         .eq("id", 6)
-        .single();
+        .maybeSingle();
       
       if (error) throw error;
       if (data) setIntroContent(data.content);
@@ -69,7 +69,7 @@ const Index = () => {
         <Link to="/reference-descriptions">
           <Button variant="outline" className="w-full h-32 flex flex-col items-center justify-center gap-2">
             <Database className="w-8 h-8" />
-            <span>View Reference Descriptions</span>
+            <span>View Reference List</span>
           </Button>
         </Link>
         <Link to="/watches/new">
@@ -81,7 +81,7 @@ const Index = () => {
         <Link to="/reference-descriptions/new">
           <Button variant="outline" className="w-full h-32 flex flex-col items-center justify-center gap-2">
             <FilePlus className="w-8 h-8" />
-            <span>Add New Reference Description</span>
+            <span>Add New Reference</span>
           </Button>
         </Link>
         <Dialog open={isEditingIntro} onOpenChange={setIsEditingIntro}>

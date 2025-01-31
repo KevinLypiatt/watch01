@@ -9,6 +9,7 @@ import ReferenceDescriptions from "./pages/ReferenceDescriptions";
 import EditReferenceDescription from "./pages/EditReferenceDescription";
 import EditWatch from "./pages/EditWatch";
 import NewWatch from "./pages/NewWatch";
+import NewReferenceDescription from "./pages/NewReferenceDescription";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -26,6 +27,7 @@ const App = () => (
           <Route path="/watches/new" element={<NewWatch />} />
           <Route path="/reference-descriptions" element={<ReferenceDescriptions />} />
           <Route path="/reference-descriptions/:id" element={<EditReferenceDescription />} />
+          <Route path="/reference-descriptions/new" element={<NewReferenceDescription />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>
