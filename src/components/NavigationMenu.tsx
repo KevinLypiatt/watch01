@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { cn } from "@/lib/utils";
+import { Link } from "react-router-dom";
 
 export const NavigationMenu = () => {
   const [scrolled, setScrolled] = useState(false);
@@ -21,7 +22,14 @@ export const NavigationMenu = () => {
           : "bg-transparent"
       )}
     >
-      <div className="max-w-7xl mx-auto flex items-center justify-between" />
+      <div className="max-w-7xl mx-auto flex items-center justify-between">
+        <Link to="/" className="text-lg font-semibold">
+          Home
+        </Link>
+        <Link to="/watch-list" className="text-lg">
+          Watch List
+        </Link>
+      </div>
     </nav>
   );
 };
