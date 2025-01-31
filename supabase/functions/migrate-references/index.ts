@@ -23,22 +23,23 @@ Deno.serve(async (req) => {
       }
     )
 
-    // Get all watches that have a model_reference
-    const { data: watches, error: fetchError } = await supabaseClient
+    // Get distinct brand and model_reference combinations from watches
+    const { data: uniqueReferences, error: fetchError } = await supabaseClient
       .from('watches')
       .select('brand, model_reference')
       .not('model_reference', 'is', null)
+      .not('brand', 'is', null)
 
     if (fetchError) {
       console.error('Error fetching watches:', fetchError)
       throw new Error('Failed to fetch watches: ' + fetchError.message)
     }
 
-    if (!watches || watches.length === 0) {
+    if (!uniqueReferences || uniqueReferences.length === 0) {
       return new Response(
         JSON.stringify({
           success: false,
-          error: 'No watches found with model references to migrate'
+          error: 'No watches found with brand and model references to migrate'
         }),
         {
           headers: { ...corsHeaders, 'Content-Type': 'application/json' },
@@ -47,43 +48,32 @@ Deno.serve(async (req) => {
       )
     }
 
-    console.log(`Found ${watches.length} watches to process`)
+    // Create a Set to store unique combinations
+    const uniqueCombinations = new Set(
+      uniqueReferences.map(ref => JSON.stringify({ brand: ref.brand, reference_name: ref.model_reference }))
+    )
+
+    console.log(`Found ${uniqueCombinations.size} unique brand/reference combinations`)
     let processedCount = 0
 
-    // Process each watch
-    for (const watch of watches || []) {
-      console.log('Processing watch:', watch)
-      
-      if (!watch.brand || !watch.model_reference) {
-        console.warn('Skipping watch with missing brand or model_reference:', watch)
-        continue
-      }
+    // Process each unique combination
+    for (const combination of uniqueCombinations) {
+      const { brand, reference_name } = JSON.parse(combination)
+      console.log('Processing combination:', { brand, reference_name })
 
       const { error: insertError } = await supabaseClient
         .from('reference_descriptions')
         .insert({
-          brand: watch.brand,
-          reference_name: watch.model_reference
+          brand: brand,
+          reference_name: reference_name
         })
 
       if (insertError) {
-        console.error('Insert error for watch:', watch, insertError)
-        throw new Error(`Failed to insert reference for ${watch.model_reference}: ${insertError.message}`)
+        console.error('Insert error for combination:', { brand, reference_name }, insertError)
+        // Continue with other records even if one fails
+        continue
       }
       processedCount++
-    }
-
-    if (processedCount === 0) {
-      return new Response(
-        JSON.stringify({
-          success: false,
-          error: 'No references were successfully migrated'
-        }),
-        {
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-          status: 400,
-        }
-      )
     }
 
     console.log(`Successfully processed ${processedCount} references`)
