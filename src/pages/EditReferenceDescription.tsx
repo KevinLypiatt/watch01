@@ -29,9 +29,7 @@ const EditReferenceDescription = () => {
   });
 
   const mutation = useMutation({
-    mutationF
-
-n: async (updatedReference: any) => {
+    mutationFn: async (updatedReference: any) => {
       const { error } = await supabase
         .from("reference_descriptions")
         .update(updatedReference)
