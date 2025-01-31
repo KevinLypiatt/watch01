@@ -10,14 +10,20 @@ import {
 } from "@/components/ui/table";
 
 const WatchList = () => {
-  const { data: watches, isLoading } = useQuery({
+  const { data: watches, isLoading, error } = useQuery({
     queryKey: ["watches"],
     queryFn: async () => {
+      console.log("Fetching watches...");
       const { data, error } = await supabase
         .from("watches")
         .select("brand, model_reference, model_name");
 
-      if (error) throw error;
+      if (error) {
+        console.error("Error fetching watches:", error);
+        throw error;
+      }
+      
+      console.log("Fetched watches:", data);
       return data;
     },
   });
@@ -26,6 +32,15 @@ const WatchList = () => {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <p>Loading watches...</p>
+      </div>
+    );
+  }
+
+  if (error) {
+    console.error("Error in component:", error);
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <p>Error loading watches. Please try again later.</p>
       </div>
     );
   }
@@ -52,6 +67,9 @@ const WatchList = () => {
             ))}
           </TableBody>
         </Table>
+      </div>
+      <div className="mt-4 text-sm text-gray-500">
+        {watches?.length === 0 && "No watches found"}
       </div>
     </div>
   );
