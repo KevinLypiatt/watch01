@@ -22,7 +22,7 @@ Deno.serve(async (req) => {
       }
     )
 
-    // Get all watches
+    // Get all watches with non-null brand and model_reference
     const { data: watches, error: fetchError } = await supabaseClient
       .from('watches')
       .select('brand, model_reference')
@@ -49,14 +49,14 @@ Deno.serve(async (req) => {
       )
     }
 
-    // Insert each watch reference into reference_descriptions
-    const { data: insertedData, error: insertError } = await supabaseClient
+    // Create a reference description for each watch
+    const { error: insertError } = await supabaseClient
       .from('reference_descriptions')
-      .upsert(
+      .insert(
         watches.map(watch => ({
           brand: watch.brand,
           reference_name: watch.model_reference,
-          reference_description: null // This can be filled in later
+          reference_description: null
         }))
       )
 
