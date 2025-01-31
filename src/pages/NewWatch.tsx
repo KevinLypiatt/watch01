@@ -3,11 +3,10 @@ import { useNavigate } from "react-router-dom";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
-import { ArrowLeft, Loader } from "lucide-react";
+import { ArrowLeft } from "lucide-react";
 import { PageHeader } from "@/components/PageHeader";
+import { WatchForm } from "@/components/watch/WatchForm";
 import {
   Dialog,
   DialogContent,
@@ -15,6 +14,7 @@ import {
   DialogTitle,
   DialogFooter,
 } from "@/components/ui/dialog";
+import { Textarea } from "@/components/ui/textarea";
 
 const NewWatch = () => {
   const navigate = useNavigate();
@@ -148,119 +148,15 @@ const NewWatch = () => {
           Back to Watch List
         </Button>
         <h1 className="text-2xl font-bold mb-6">New Watch</h1>
-        <form onSubmit={handleSubmit} className="space-y-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div>
-              <label className="block text-sm font-medium mb-2">Brand</label>
-              <Input
-                name="brand"
-                onChange={handleInputChange}
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium mb-2">Model Name</label>
-              <Input
-                name="model_name"
-                onChange={handleInputChange}
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium mb-2">Model Reference</label>
-              <Input
-                name="model_reference"
-                onChange={handleInputChange}
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium mb-2">Case Material</label>
-              <Input
-                name="case_material"
-                onChange={handleInputChange}
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium mb-2">Year</label>
-              <Input
-                name="year"
-                type="number"
-                onChange={handleInputChange}
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium mb-2">Movement Type</label>
-              <Input
-                name="movement_type"
-                onChange={handleInputChange}
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium mb-2">Listing Reference</label>
-              <Input
-                name="listing_reference"
-                onChange={handleInputChange}
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium mb-2">Condition</label>
-              <Input
-                name="condition"
-                onChange={handleInputChange}
-              />
-            </div>
-          </div>
-          <div>
-            <label className="block text-sm font-medium mb-2">Additional Information</label>
-            <Textarea
-              name="additional_information"
-              onChange={handleInputChange}
-              className="min-h-[100px]"
-            />
-          </div>
-          <div className="flex gap-4 mb-4">
-            <Button
-              type="button"
-              onClick={() => handleStyleGuideEdit('watch_description_system_prompt')}
-              variant="outline"
-              className="bg-[#f3f3f3] hover:bg-[#e5e5e5]"
-            >
-              Edit System Prompt
-            </Button>
-            <Button
-              type="button"
-              onClick={() => handleStyleGuideEdit('watch_description_guide')}
-              variant="outline"
-              className="bg-[#f3f3f3] hover:bg-[#e5e5e5]"
-            >
-              Edit Style Guide
-            </Button>
-            <Button
-              type="button"
-              onClick={handleGenerateDescription}
-              disabled={isGenerating}
-              variant="outline"
-              className="bg-[#f3f3f3] hover:bg-[#e5e5e5]"
-            >
-              {isGenerating ? (
-                <>
-                  <Loader className="mr-2 h-4 w-4 animate-spin" />
-                  Working...
-                </>
-              ) : (
-                "Generate Description"
-              )}
-            </Button>
-          </div>
-          <div>
-            <label className="block text-sm font-medium mb-2">Description</label>
-            <Textarea
-              name="description"
-              value={formData.description || ""}
-              onChange={handleInputChange}
-              className="min-h-[200px]"
-            />
-          </div>
-          <Button type="submit">Save New Watch</Button>
-        </form>
+        
+        <WatchForm 
+          formData={formData}
+          handleInputChange={handleInputChange}
+          handleGenerateDescription={handleGenerateDescription}
+          handleStyleGuideEdit={handleStyleGuideEdit}
+          isGenerating={isGenerating}
+          handleSubmit={handleSubmit}
+        />
 
         <Dialog open={isPromptDialogOpen} onOpenChange={setIsPromptDialogOpen}>
           <DialogContent className="max-w-3xl">

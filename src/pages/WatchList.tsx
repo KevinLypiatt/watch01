@@ -86,7 +86,13 @@ const WatchList = () => {
               onChange={(e) => setSearchInput(e.target.value)}
               onKeyDown={(e) => e.key === "Enter" && handleSearch()}
             />
-            <Button onClick={handleSearch}>Search</Button>
+            <Button 
+              onClick={handleSearch}
+              variant="outline"
+              className="bg-[#f3f3f3] hover:bg-[#e5e5e5]"
+            >
+              Apply
+            </Button>
           </div>
         </div>
 

@@ -85,7 +85,13 @@ const ReferenceDescriptions = () => {
               onKeyDown={(e) => e.key === "Enter" && handleSearch()}
               className="max-w-md"
             />
-            <Button onClick={handleSearch}>Search</Button>
+            <Button 
+              onClick={handleSearch}
+              variant="outline"
+              className="bg-[#f3f3f3] hover:bg-[#e5e5e5]"
+            >
+              Apply
+            </Button>
           </div>
         </div>
 
