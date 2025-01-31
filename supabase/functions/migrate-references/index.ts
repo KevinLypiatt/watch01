@@ -42,6 +42,8 @@ Deno.serve(async (req) => {
       return false
     })
 
+    console.log(`Found ${uniqueWatches.length} unique watch references`)
+
     // Insert unique combinations into reference_descriptions
     const { data: insertedData, error: insertError } = await supabaseClient
       .from('reference_descriptions')
@@ -51,10 +53,16 @@ Deno.serve(async (req) => {
           reference_name: watch.model_reference,
           reference_description: null // This can be filled in later
         })),
-        { onConflict: 'brand,reference_name' }
+        { 
+          onConflict: 'brand,reference_name',
+          ignoreDuplicates: true 
+        }
       )
 
-    if (insertError) throw insertError
+    if (insertError) {
+      console.error('Insert error:', insertError)
+      throw insertError
+    }
 
     return new Response(
       JSON.stringify({
@@ -67,6 +75,7 @@ Deno.serve(async (req) => {
       }
     )
   } catch (error) {
+    console.error('Migration error:', error)
     return new Response(
       JSON.stringify({ error: error.message }),
       {
