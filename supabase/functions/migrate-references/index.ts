@@ -22,38 +22,24 @@ Deno.serve(async (req) => {
       }
     )
 
-    // Get unique combinations from watches table
+    // Get all watches
     const { data: watches, error: fetchError } = await supabaseClient
       .from('watches')
       .select('brand, model_reference')
+      .not('brand', 'is', null)
+      .not('model_reference', 'is', null)
 
-    if (fetchError) throw fetchError
+    if (fetchError) {
+      console.error('Error fetching watches:', fetchError)
+      throw fetchError
+    }
 
     console.log('Total watches found:', watches?.length || 0)
-    console.log('Raw watches data:', watches)
 
-    // Filter out null values and create a Set to store unique combinations
-    const uniqueCombinations = new Set()
-    const uniqueWatches = watches?.filter(watch => {
-      if (!watch.brand || !watch.model_reference) {
-        console.log('Skipping watch due to null values:', watch)
-        return false
-      }
-      const key = `${watch.brand}-${watch.model_reference}`
-      if (!uniqueCombinations.has(key)) {
-        uniqueCombinations.add(key)
-        return true
-      }
-      return false
-    }) || []
-
-    console.log(`Found ${uniqueWatches.length} unique watch references`)
-    console.log('Unique watches to insert:', uniqueWatches)
-
-    if (uniqueWatches.length === 0) {
+    if (!watches || watches.length === 0) {
       return new Response(
         JSON.stringify({
-          message: 'No valid watch references found to migrate',
+          message: 'No watches found to migrate',
           count: 0
         }),
         {
@@ -63,19 +49,15 @@ Deno.serve(async (req) => {
       )
     }
 
-    // Insert unique combinations into reference_descriptions
+    // Insert each watch reference into reference_descriptions
     const { data: insertedData, error: insertError } = await supabaseClient
       .from('reference_descriptions')
       .upsert(
-        uniqueWatches.map(watch => ({
+        watches.map(watch => ({
           brand: watch.brand,
           reference_name: watch.model_reference,
           reference_description: null // This can be filled in later
-        })),
-        { 
-          onConflict: 'brand,reference_name',
-          ignoreDuplicates: true 
-        }
+        }))
       )
 
     if (insertError) {
@@ -83,12 +65,12 @@ Deno.serve(async (req) => {
       throw insertError
     }
 
-    console.log('Successfully inserted data:', insertedData)
+    console.log('Successfully processed watches:', watches.length)
 
     return new Response(
       JSON.stringify({
         message: 'Migration completed successfully',
-        count: uniqueWatches.length
+        count: watches.length
       }),
       {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
