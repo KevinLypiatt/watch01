@@ -13,6 +13,8 @@ serve(async (req) => {
   }
 
   try {
+    console.log('Starting watch description generation...');
+    
     const supabaseClient = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
@@ -20,6 +22,8 @@ serve(async (req) => {
 
     const { watchData } = await req.json();
     const { brand, model_reference } = watchData;
+    
+    console.log('Watch data received:', JSON.stringify(watchData, null, 2));
 
     // Get the system prompt and guide
     const { data: styleGuides } = await supabaseClient
@@ -29,6 +33,10 @@ serve(async (req) => {
 
     const systemPrompt = styleGuides?.find(g => g.name === 'watch_description_system_prompt')?.content || '';
     const guide = styleGuides?.find(g => g.name === 'watch_description_guide')?.content || '';
+    
+    console.log('Style guides loaded:');
+    console.log('System prompt:', systemPrompt);
+    console.log('Style guide:', guide);
 
     // Get the reference description
     const { data: referenceDesc } = await supabaseClient
@@ -37,8 +45,12 @@ serve(async (req) => {
       .eq('brand', brand)
       .eq('reference_name', model_reference)
       .maybeSingle();
+    
+    console.log('Reference description found:', referenceDesc?.reference_description || 'No reference found');
 
     const prompt = `${systemPrompt}\n\nStyle Guide:\n${guide}\n\nReference Description:\n${referenceDesc?.reference_description || ''}\n\nWatch Details:\n${JSON.stringify(watchData, null, 2)}`;
+    
+    console.log('Final prompt being sent to Claude:', prompt);
 
     const response = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
@@ -60,7 +72,7 @@ serve(async (req) => {
     });
 
     const data = await response.json();
-    console.log('Anthropic response:', data);
+    console.log('Claude response received:', data);
 
     return new Response(
       JSON.stringify({ description: data.content[0].text }),
@@ -68,7 +80,7 @@ serve(async (req) => {
     );
 
   } catch (error) {
-    console.error('Error:', error);
+    console.error('Error in generate-watch-description function:', error);
     return new Response(
       JSON.stringify({ error: error.message }),
       { 

@@ -5,7 +5,7 @@ import { useNavigate } from "react-router-dom";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Edit, Plus } from "lucide-react";
+import { Edit, Plus, ArrowUpDown } from "lucide-react";
 import { PageHeader } from "@/components/PageHeader";
 
 const WatchList = () => {
@@ -16,9 +16,11 @@ const WatchList = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [brandFilter, setBrandFilter] = useState("");
   const [modelFilter, setModelFilter] = useState("");
+  const [sortColumn, setSortColumn] = useState<string | null>(null);
+  const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
 
   const { data: watches, isLoading } = useQuery({
-    queryKey: ["watches", searchTerm, brandFilter, modelFilter],
+    queryKey: ["watches", searchTerm, brandFilter, modelFilter, sortColumn, sortDirection],
     queryFn: async () => {
       let query = supabase.from("watches").select("*");
 
@@ -33,12 +35,24 @@ const WatchList = () => {
           `brand.ilike.%${searchTerm}%,model_name.ilike.%${searchTerm}%,model_reference.ilike.%${searchTerm}%`
         );
       }
+      if (sortColumn) {
+        query = query.order(sortColumn, { ascending: sortDirection === 'asc' });
+      }
 
       const { data, error } = await query;
       if (error) throw error;
       return data || [];
     },
   });
+
+  const handleSort = (column: string) => {
+    if (sortColumn === column) {
+      setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
+    } else {
+      setSortColumn(column);
+      setSortDirection('asc');
+    }
+  };
 
   const handleSearch = () => {
     setSearchTerm(searchInput);
@@ -100,13 +114,34 @@ const WatchList = () => {
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Brand</TableHead>
-                <TableHead>Model Reference</TableHead>
-                <TableHead>Model Name</TableHead>
-                <TableHead>Case Material</TableHead>
-                <TableHead>Year</TableHead>
-                <TableHead>Movement Type</TableHead>
-                <TableHead>Condition</TableHead>
+                <TableHead onClick={() => handleSort('brand')} className="cursor-pointer hover:bg-muted/50">
+                  Brand
+                  <ArrowUpDown className="ml-2 h-4 w-4 inline" />
+                </TableHead>
+                <TableHead onClick={() => handleSort('model_reference')} className="cursor-pointer hover:bg-muted/50">
+                  Model Reference
+                  <ArrowUpDown className="ml-2 h-4 w-4 inline" />
+                </TableHead>
+                <TableHead onClick={() => handleSort('model_name')} className="cursor-pointer hover:bg-muted/50">
+                  Model Name
+                  <ArrowUpDown className="ml-2 h-4 w-4 inline" />
+                </TableHead>
+                <TableHead onClick={() => handleSort('case_material')} className="cursor-pointer hover:bg-muted/50">
+                  Case Material
+                  <ArrowUpDown className="ml-2 h-4 w-4 inline" />
+                </TableHead>
+                <TableHead onClick={() => handleSort('year')} className="cursor-pointer hover:bg-muted/50">
+                  Year
+                  <ArrowUpDown className="ml-2 h-4 w-4 inline" />
+                </TableHead>
+                <TableHead onClick={() => handleSort('movement_type')} className="cursor-pointer hover:bg-muted/50">
+                  Movement Type
+                  <ArrowUpDown className="ml-2 h-4 w-4 inline" />
+                </TableHead>
+                <TableHead onClick={() => handleSort('condition')} className="cursor-pointer hover:bg-muted/50">
+                  Condition
+                  <ArrowUpDown className="ml-2 h-4 w-4 inline" />
+                </TableHead>
                 <TableHead className="w-[50px]">Actions</TableHead>
               </TableRow>
             </TableHeader>

@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useNavigate } from "react-router-dom";
-import { Edit, Plus } from "lucide-react";
+import { Edit, Plus, ArrowUpDown } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Input } from "@/components/ui/input";
@@ -16,9 +16,11 @@ const ReferenceDescriptions = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [brandFilter, setBrandFilter] = useState("");
   const [referenceFilter, setReferenceFilter] = useState("");
+  const [sortColumn, setSortColumn] = useState<string | null>(null);
+  const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
 
   const { data: references, isLoading } = useQuery({
-    queryKey: ["references", brandFilter, referenceFilter, searchTerm],
+    queryKey: ["references", brandFilter, referenceFilter, searchTerm, sortColumn, sortDirection],
     queryFn: async () => {
       let query = supabase.from("reference_descriptions").select("*");
 
@@ -33,12 +35,24 @@ const ReferenceDescriptions = () => {
           `brand.ilike.%${searchTerm}%,reference_name.ilike.%${searchTerm}%,reference_description.ilike.%${searchTerm}%`
         );
       }
+      if (sortColumn) {
+        query = query.order(sortColumn, { ascending: sortDirection === 'asc' });
+      }
 
       const { data, error } = await query;
       if (error) throw error;
       return data || [];
     },
   });
+
+  const handleSort = (column: string) => {
+    if (sortColumn === column) {
+      setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
+    } else {
+      setSortColumn(column);
+      setSortDirection('asc');
+    }
+  };
 
   const handleSearch = () => {
     setSearchTerm(searchInput);
@@ -99,9 +113,18 @@ const ReferenceDescriptions = () => {
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Brand</TableHead>
-                <TableHead>Reference Name</TableHead>
-                <TableHead>Description</TableHead>
+                <TableHead onClick={() => handleSort('brand')} className="cursor-pointer hover:bg-muted/50">
+                  Brand
+                  <ArrowUpDown className="ml-2 h-4 w-4 inline" />
+                </TableHead>
+                <TableHead onClick={() => handleSort('reference_name')} className="cursor-pointer hover:bg-muted/50">
+                  Reference Name
+                  <ArrowUpDown className="ml-2 h-4 w-4 inline" />
+                </TableHead>
+                <TableHead onClick={() => handleSort('reference_description')} className="cursor-pointer hover:bg-muted/50">
+                  Description
+                  <ArrowUpDown className="ml-2 h-4 w-4 inline" />
+                </TableHead>
                 <TableHead className="w-[100px]">Actions</TableHead>
               </TableRow>
             </TableHeader>
