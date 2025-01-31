@@ -1,137 +1,113 @@
-import { useState } from "react";
-import { useNavigate, useParams } from "react-router-dom";
-import { useQuery } from "@tanstack/react-query";
+import { useParams, useNavigate } from "react-router-dom";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { useToast } from "@/components/ui/use-toast";
-import { ArrowLeft, Save } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
+import { ArrowLeft } from "lucide-react";
 
 const EditReferenceDescription = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const { toast } = useToast();
-  const [formData, setFormData] = useState({
-    brand: "",
-    reference_name: "",
-    reference_description: "",
-  });
+  const queryClient = useQueryClient();
 
-  const { isLoading } = useQuery({
+  const { data: reference, isLoading } = useQuery({
     queryKey: ["reference", id],
     queryFn: async () => {
       const { data, error } = await supabase
         .from("reference_descriptions")
         .select("*")
-        .eq("reference_id", id)
+        .eq("reference_id", parseInt(id as string))
         .single();
 
-      if (error) {
-        console.error("Error fetching reference:", error);
-        throw error;
-      }
-
-      if (data) {
-        setFormData({
-          brand: data.brand || "",
-          reference_name: data.reference_name || "",
-          reference_description: data.reference_description || "",
-        });
-      }
-
+      if (error) throw error;
       return data;
     },
   });
 
-  const handleSave = async () => {
-    try {
+  const mutation = useMutation({
+    mutationFn: async (updatedReference: any) => {
       const { error } = await supabase
         .from("reference_descriptions")
-        .update(formData)
-        .eq("reference_id", id);
+        .update(updatedReference)
+        .eq("reference_id", parseInt(id as string));
 
       if (error) throw error;
-
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["reference", id] });
       toast({
         title: "Success",
         description: "Reference description updated successfully",
       });
-
       navigate("/reference-descriptions");
-    } catch (error) {
-      console.error("Error updating reference:", error);
+    },
+    onError: (error) => {
       toast({
         title: "Error",
         description: "Failed to update reference description",
         variant: "destructive",
       });
-    }
-  };
+      console.error("Error updating reference:", error);
+    },
+  });
 
-  const handleChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
-  ) => {
-    const { name, value } = e.target;
-    setFormData((prev) => ({ ...prev, [name]: value }));
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    const form = e.target as HTMLFormElement;
+    const formData = new FormData(form);
+    const updatedReference = {
+      brand: formData.get("brand"),
+      reference_name: formData.get("reference_name"),
+      reference_description: formData.get("reference_description"),
+    };
+    mutation.mutate(updatedReference);
   };
 
   if (isLoading) {
-    return <div className="flex items-center justify-center min-h-screen">Loading...</div>;
+    return <div>Loading...</div>;
   }
 
   return (
     <div className="container mx-auto py-10">
-      <div className="max-w-2xl mx-auto">
-        <div className="flex items-center gap-4 mb-6">
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={() => navigate("/reference-descriptions")}
-          >
-            <ArrowLeft className="h-4 w-4" />
-          </Button>
-          <h1 className="text-2xl font-bold">Edit Reference Description</h1>
+      <Button
+        variant="ghost"
+        onClick={() => navigate("/reference-descriptions")}
+        className="mb-6"
+      >
+        <ArrowLeft className="mr-2" />
+        Back to References
+      </Button>
+      <h1 className="text-2xl font-bold mb-6">Edit Reference Description</h1>
+      <form onSubmit={handleSubmit} className="space-y-6">
+        <div>
+          <label className="block text-sm font-medium mb-2">Brand</label>
+          <Input
+            name="brand"
+            defaultValue={reference?.brand || ""}
+            className="w-full"
+          />
         </div>
-
-        <div className="space-y-6">
-          <div className="space-y-2">
-            <label className="text-sm font-medium">Brand</label>
-            <Input
-              name="brand"
-              value={formData.brand}
-              onChange={handleChange}
-              placeholder="Enter brand name"
-            />
-          </div>
-
-          <div className="space-y-2">
-            <label className="text-sm font-medium">Reference Name</label>
-            <Input
-              name="reference_name"
-              value={formData.reference_name}
-              onChange={handleChange}
-              placeholder="Enter reference name"
-            />
-          </div>
-
-          <div className="space-y-2">
-            <label className="text-sm font-medium">Description</label>
-            <Textarea
-              name="reference_description"
-              value={formData.reference_description}
-              onChange={handleChange}
-              placeholder="Enter reference description"
-              className="min-h-[150px]"
-            />
-          </div>
-
-          <Button onClick={handleSave} className="w-full">
-            <Save className="h-4 w-4 mr-2" />
-            Save Changes
-          </Button>
+        <div>
+          <label className="block text-sm font-medium mb-2">Reference Name</label>
+          <Input
+            name="reference_name"
+            defaultValue={reference?.reference_name || ""}
+            className="w-full"
+          />
         </div>
-      </div>
+        <div>
+          <label className="block text-sm font-medium mb-2">Description</label>
+          <Textarea
+            name="reference_description"
+            defaultValue={reference?.reference_description || ""}
+            className="w-full min-h-[200px]"
+          />
+        </div>
+        <Button type="submit">Save Changes</Button>
+      </form>
     </div>
   );
 };

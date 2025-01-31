@@ -26,9 +26,14 @@ export const NavigationMenu = () => {
         <Link to="/" className="text-lg font-semibold">
           Home
         </Link>
-        <Link to="/watch-list" className="text-lg">
-          Watch List
-        </Link>
+        <div className="flex gap-6">
+          <Link to="/watch-list" className="text-lg">
+            Watch List
+          </Link>
+          <Link to="/reference-descriptions" className="text-lg">
+            References
+          </Link>
+        </div>
       </div>
     </nav>
   );

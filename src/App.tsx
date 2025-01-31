@@ -7,6 +7,8 @@ import Index from "./pages/Index";
 import WatchList from "./pages/WatchList";
 import ReferenceDescriptions from "./pages/ReferenceDescriptions";
 import EditReferenceDescription from "./pages/EditReferenceDescription";
+import EditWatch from "./pages/EditWatch";
+import NewWatch from "./pages/NewWatch";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -20,6 +22,8 @@ const App = () => (
         <Routes>
           <Route path="/" element={<Index />} />
           <Route path="/watch-list" element={<WatchList />} />
+          <Route path="/watches/:id/edit" element={<EditWatch />} />
+          <Route path="/watches/new" element={<NewWatch />} />
           <Route path="/reference-descriptions" element={<ReferenceDescriptions />} />
           <Route path="/reference-descriptions/:id" element={<EditReferenceDescription />} />
           <Route path="*" element={<NotFound />} />

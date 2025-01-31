@@ -1,5 +1,7 @@
+import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { useNavigate } from "react-router-dom";
 import {
   Table,
   TableBody,
@@ -8,22 +10,40 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { Edit, Plus } from "lucide-react";
 
 const WatchList = () => {
-  const { data: watches, isLoading, error } = useQuery({
-    queryKey: ["watches"],
+  const navigate = useNavigate();
+  const [searchTerm, setSearchTerm] = useState("");
+  const [brandFilter, setBrandFilter] = useState("");
+  const [modelFilter, setModelFilter] = useState("");
+
+  const { data: watches, isLoading } = useQuery({
+    queryKey: ["watches", searchTerm, brandFilter, modelFilter],
     queryFn: async () => {
-      console.log("Fetching watches...");
-      const { data, error } = await supabase
+      let query = supabase
         .from("watches")
         .select("*");
+
+      if (brandFilter) {
+        query = query.ilike('brand', `%${brandFilter}%`);
+      }
+      if (modelFilter) {
+        query = query.ilike('model_reference', `%${modelFilter}%`);
+      }
+      if (searchTerm) {
+        query = query.or(`brand.ilike.%${searchTerm}%,model_name.ilike.%${searchTerm}%,model_reference.ilike.%${searchTerm}%`);
+      }
+
+      const { data, error } = await query;
 
       if (error) {
         console.error("Supabase error:", error);
         throw error;
       }
       
-      console.log("Raw response from Supabase:", { data, error });
       return data || [];
     },
   });
@@ -36,20 +56,34 @@ const WatchList = () => {
     );
   }
 
-  if (error) {
-    console.error("Error in component:", error);
-    return (
-      <div className="flex items-center justify-center min-h-screen">
-        <p>Error loading watches. Please try again later.</p>
-      </div>
-    );
-  }
-
-  console.log("Watches in render:", watches);
-
   return (
     <div className="container mx-auto py-10">
-      <h1 className="text-2xl font-bold mb-6">Watch List</h1>
+      <div className="flex justify-between items-center mb-6">
+        <h1 className="text-2xl font-bold">Watch List</h1>
+        <Button onClick={() => navigate("/watches/new")}>
+          <Plus className="mr-2" />
+          Add New Watch
+        </Button>
+      </div>
+      
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+        <Input
+          placeholder="Search..."
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+        />
+        <Input
+          placeholder="Filter by brand..."
+          value={brandFilter}
+          onChange={(e) => setBrandFilter(e.target.value)}
+        />
+        <Input
+          placeholder="Filter by model reference..."
+          value={modelFilter}
+          onChange={(e) => setModelFilter(e.target.value)}
+        />
+      </div>
+
       <div className="rounded-md border">
         <Table>
           <TableHeader>
@@ -61,12 +95,13 @@ const WatchList = () => {
               <TableHead>Year</TableHead>
               <TableHead>Movement Type</TableHead>
               <TableHead>Condition</TableHead>
+              <TableHead className="w-[50px]">Actions</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {watches && watches.length > 0 ? (
-              watches.map((watch, index) => (
-                <TableRow key={index}>
+              watches.map((watch) => (
+                <TableRow key={watch.id}>
                   <TableCell>{watch.brand || "-"}</TableCell>
                   <TableCell>{watch.model_reference || "-"}</TableCell>
                   <TableCell>{watch.model_name || "-"}</TableCell>
@@ -74,11 +109,20 @@ const WatchList = () => {
                   <TableCell>{watch.year || "-"}</TableCell>
                   <TableCell>{watch.movement_type || "-"}</TableCell>
                   <TableCell>{watch.condition || "-"}</TableCell>
+                  <TableCell>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => navigate(`/watches/${watch.id}/edit`)}
+                    >
+                      <Edit className="h-4 w-4" />
+                    </Button>
+                  </TableCell>
                 </TableRow>
               ))
             ) : (
               <TableRow>
-                <TableCell colSpan={7} className="text-center py-4">
+                <TableCell colSpan={8} className="text-center py-4">
                   No watches found
                 </TableCell>
               </TableRow>
