@@ -1,4 +1,4 @@
-import { NavigationMenu } from "@/components/NavigationMenu";
+import { NavigationMenu } from "@/components/ui/navigation-menu";
 import { HeroSection } from "@/components/HeroSection";
 import { ProductShowcase } from "@/components/ProductShowcase";
 import { FeatureCard } from "@/components/FeatureCard";
