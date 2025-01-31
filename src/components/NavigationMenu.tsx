@@ -21,22 +21,7 @@ export const NavigationMenu = () => {
           : "bg-transparent"
       )}
     >
-      <div className="max-w-7xl mx-auto flex items-center justify-between">
-        <a href="/" className="text-xl font-medium text-accent-dark">
-          Brand
-        </a>
-        <div className="hidden md:flex items-center space-x-8">
-          {["Features", "Products", "About", "Contact"].map((item) => (
-            <a
-              key={item}
-              href={`#${item.toLowerCase()}`}
-              className="text-accent hover:text-accent-dark transition-colors duration-200"
-            >
-              {item}
-            </a>
-          ))}
-        </div>
-      </div>
+      <div className="max-w-7xl mx-auto flex items-center justify-between" />
     </nav>
   );
 };
