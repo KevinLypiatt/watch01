@@ -16,7 +16,7 @@ const WatchList = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [brandFilter, setBrandFilter] = useState("");
   const [modelFilter, setModelFilter] = useState("");
-  const [sortColumn, setSortColumn] = useState<string | null>(null);
+  const [sortColumn, setSortColumn] = useState<string>("brand");
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
 
   const { data: watches, isLoading } = useQuery({
@@ -35,6 +35,10 @@ const WatchList = () => {
           `brand.ilike.%${searchTerm}%,model_name.ilike.%${searchTerm}%,model_reference.ilike.%${searchTerm}%`
         );
       }
+
+      // Default sorting by brand and then model_reference
+      query = query.order('brand', { ascending: true }).order('model_reference', { ascending: true });
+      
       if (sortColumn) {
         query = query.order(sortColumn, { ascending: sortDirection === 'asc' });
       }
