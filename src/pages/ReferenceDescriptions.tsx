@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation } from "@tanstack/react-query";
 import { useNavigate } from "react-router-dom";
 import { Edit, Plus, ArrowUpDown } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
@@ -7,9 +7,11 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { PageHeader } from "@/components/PageHeader";
+import { useToast } from "@/hooks/use-toast";
 
 const ReferenceDescriptions = () => {
   const navigate = useNavigate();
+  const { toast } = useToast();
   const [searchInput, setSearchInput] = useState("");
   const [brandInput, setBrandInput] = useState("");
   const [referenceInput, setReferenceInput] = useState("");
@@ -18,6 +20,7 @@ const ReferenceDescriptions = () => {
   const [referenceFilter, setReferenceFilter] = useState("");
   const [sortColumn, setSortColumn] = useState<string | null>(null);
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
+  const [isGenerating, setIsGenerating] = useState(false);
 
   const { data: references, isLoading } = useQuery({
     queryKey: ["references", brandFilter, referenceFilter, searchTerm, sortColumn, sortDirection],
@@ -45,6 +48,32 @@ const ReferenceDescriptions = () => {
     },
   });
 
+  const generateMutation = useMutation({
+    mutationFn: async () => {
+      const { data, error } = await supabase.functions.invoke('generate-reference-descriptions', {
+        body: { generateAll: true },
+      });
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: () => {
+      toast({
+        title: "Success",
+        description: "Reference descriptions generated successfully",
+      });
+      setIsGenerating(false);
+    },
+    onError: (error) => {
+      toast({
+        title: "Error",
+        description: "Failed to generate reference descriptions",
+        variant: "destructive",
+      });
+      console.error("Error generating descriptions:", error);
+      setIsGenerating(false);
+    },
+  });
+
   const handleSort = (column: string) => {
     if (sortColumn === column) {
       setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
@@ -60,6 +89,11 @@ const ReferenceDescriptions = () => {
     setReferenceFilter(referenceInput);
   };
 
+  const handleGenerateAll = () => {
+    setIsGenerating(true);
+    generateMutation.mutate();
+  };
+
   if (isLoading) {
     return <div className="flex items-center justify-center min-h-screen">Loading...</div>;
   }
@@ -70,10 +104,20 @@ const ReferenceDescriptions = () => {
       <div className="container mx-auto py-20">
         <div className="flex justify-between items-center mb-6">
           <h1 className="text-2xl font-bold">Reference Descriptions</h1>
-          <Button onClick={() => navigate("/reference-descriptions/new")}>
-            <Plus className="mr-2 h-4 w-4" />
-            Add New Description
-          </Button>
+          <div className="space-x-4">
+            <Button
+              variant="outline"
+              className="bg-[#f3f3f3] hover:bg-[#e5e5e5]"
+              onClick={handleGenerateAll}
+              disabled={isGenerating}
+            >
+              {isGenerating ? "Working..." : "Generate Reference Descriptions"}
+            </Button>
+            <Button onClick={() => navigate("/reference-descriptions/new")}>
+              <Plus className="mr-2 h-4 w-4" />
+              Add New Description
+            </Button>
+          </div>
         </div>
 
         <div className="space-y-4 mb-6">

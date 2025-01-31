@@ -14,6 +14,7 @@ const EditReferenceDescription = () => {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const isNewReference = !id;
+  const [isGenerating, setIsGenerating] = useState(false);
 
   const { data: reference, isLoading } = useQuery({
     queryKey: ["reference", id],
@@ -69,6 +70,33 @@ const EditReferenceDescription = () => {
     },
   });
 
+  const generateMutation = useMutation({
+    mutationFn: async () => {
+      const { data, error } = await supabase.functions.invoke('generate-reference-descriptions', {
+        body: { referenceId: parseInt(id as string) },
+      });
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: ["reference", id] });
+      toast({
+        title: "Success",
+        description: "Reference description generated successfully",
+      });
+      setIsGenerating(false);
+    },
+    onError: (error) => {
+      toast({
+        title: "Error",
+        description: "Failed to generate reference description",
+        variant: "destructive",
+      });
+      console.error("Error generating description:", error);
+      setIsGenerating(false);
+    },
+  });
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     const form = e.target as HTMLFormElement;
@@ -79,6 +107,13 @@ const EditReferenceDescription = () => {
       reference_description: formData.get("reference_description"),
     };
     mutation.mutate(updatedReference);
+  };
+
+  const handleGenerate = () => {
+    if (!isNewReference) {
+      setIsGenerating(true);
+      generateMutation.mutate();
+    }
   };
 
   if (isLoading && !isNewReference) {
@@ -97,9 +132,21 @@ const EditReferenceDescription = () => {
           <ArrowLeft className="mr-2" />
           Back to References
         </Button>
-        <h1 className="text-2xl font-bold mb-6">
-          {isNewReference ? "New Reference Description" : "Edit Reference Description"}
-        </h1>
+        <div className="flex justify-between items-center mb-6">
+          <h1 className="text-2xl font-bold">
+            {isNewReference ? "New Reference Description" : "Edit Reference Description"}
+          </h1>
+          {!isNewReference && (
+            <Button
+              variant="outline"
+              className="bg-[#f3f3f3] hover:bg-[#e5e5e5]"
+              onClick={handleGenerate}
+              disabled={isGenerating}
+            >
+              {isGenerating ? "Working..." : "Generate Reference Description"}
+            </Button>
+          )}
+        </div>
         <form onSubmit={handleSubmit} className="space-y-6">
           <div>
             <label className="block text-sm font-medium mb-2">Brand</label>
