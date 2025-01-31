@@ -12,32 +12,40 @@ const EditWatch = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  
+  // Convert id to number
+  const watchId = id ? parseInt(id) : undefined;
 
   const { data: watch, isLoading } = useQuery({
-    queryKey: ["watch", id],
+    queryKey: ["watch", watchId],
     queryFn: async () => {
+      if (!watchId) throw new Error("Watch ID is required");
+      
       const { data, error } = await supabase
         .from("watches")
         .select("*")
-        .eq("id", id)
+        .eq("id", watchId)
         .single();
 
       if (error) throw error;
       return data;
     },
+    enabled: !!watchId, // Only run query if we have a valid ID
   });
 
   const mutation = useMutation({
     mutationFn: async (updatedWatch: any) => {
+      if (!watchId) throw new Error("Watch ID is required");
+      
       const { error } = await supabase
         .from("watches")
         .update(updatedWatch)
-        .eq("id", id);
+        .eq("id", watchId);
 
       if (error) throw error;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["watch", id] });
+      queryClient.invalidateQueries({ queryKey: ["watch", watchId] });
       toast({
         title: "Success",
         description: "Watch updated successfully",
@@ -72,6 +80,10 @@ const EditWatch = () => {
     };
     mutation.mutate(updatedWatch);
   };
+
+  if (!watchId) {
+    return <div>Invalid watch ID</div>;
+  }
 
   if (isLoading) {
     return <div>Loading...</div>;
