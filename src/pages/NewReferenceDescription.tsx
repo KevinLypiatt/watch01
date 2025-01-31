@@ -6,7 +6,6 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
-import { PageHeader } from "@/components/PageHeader";
 
 const NewReferenceDescription = () => {
   const navigate = useNavigate();
@@ -52,10 +51,10 @@ const NewReferenceDescription = () => {
 
   return (
     <div className="container mx-auto py-6">
-      <PageHeader
-        title="Add New Reference Description"
-        description="Create a new reference description"
-      />
+      <div className="mb-6">
+        <h1 className="text-2xl font-bold">Add New Reference Description</h1>
+        <p className="text-muted-foreground">Create a new reference description</p>
+      </div>
       <form onSubmit={handleSubmit} className="max-w-2xl space-y-4">
         <div>
           <label htmlFor="brand" className="block text-sm font-medium mb-1">
