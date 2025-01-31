@@ -1,13 +1,15 @@
 import { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { PageHeader } from "@/components/PageHeader";
 import { ReferenceDescriptionHeader } from "@/components/reference-descriptions/ReferenceDescriptionHeader";
 import { ReferenceDescriptionFilters } from "@/components/reference-descriptions/ReferenceDescriptionFilters";
 import { ReferenceDescriptionTable } from "@/components/reference-descriptions/ReferenceDescriptionTable";
 import { useGenerateDescriptions } from "@/hooks/useGenerateDescriptions";
+import { useToast } from "@/hooks/use-toast";
 
 const ReferenceDescriptions = () => {
+  const { toast } = useToast();
   const [searchInput, setSearchInput] = useState("");
   const [brandInput, setBrandInput] = useState("");
   const [referenceInput, setReferenceInput] = useState("");
@@ -51,19 +53,77 @@ const ReferenceDescriptions = () => {
   const { data: styleGuides } = useQuery({
     queryKey: ["styleGuides"],
     queryFn: async () => {
-      const { data, error } = await supabase
+      const { data: systemPromptData, error: systemPromptError } = await supabase
         .from("style_guides")
-        .select("*")
-        .in("id", [4, 5]);
+        .select("content")
+        .eq("id", 5)
+        .maybeSingle();
+
+      const { data: styleGuideData, error: styleGuideError } = await supabase
+        .from("style_guides")
+        .select("content")
+        .eq("id", 4)
+        .maybeSingle();
+      
+      if (systemPromptError || styleGuideError) {
+        console.error("Error fetching guides:", { systemPromptError, styleGuideError });
+        return [];
+      }
+      
+      if (systemPromptData) setSystemPrompt(systemPromptData.content);
+      if (styleGuideData) setStyleGuide(styleGuideData.content);
+      
+      return [systemPromptData, styleGuideData].filter(Boolean);
+    },
+  });
+
+  const updateSystemPromptMutation = useMutation({
+    mutationFn: async () => {
+      const { error } = await supabase
+        .from("style_guides")
+        .update({ content: systemPrompt })
+        .eq("id", 5);
       if (error) throw error;
-      
-      const systemPromptGuide = data?.find(guide => guide.id === 5);
-      const styleGuideContent = data?.find(guide => guide.id === 4);
-      
-      if (systemPromptGuide) setSystemPrompt(systemPromptGuide.content);
-      if (styleGuideContent) setStyleGuide(styleGuideContent.content);
-      
-      return data || [];
+    },
+    onSuccess: () => {
+      toast({
+        title: "Success",
+        description: "System prompt updated successfully",
+      });
+      setIsEditingPrompt(false);
+    },
+    onError: (error) => {
+      toast({
+        title: "Error",
+        description: "Failed to update system prompt",
+        variant: "destructive",
+      });
+      console.error("Error updating system prompt:", error);
+    },
+  });
+
+  const updateStyleGuideMutation = useMutation({
+    mutationFn: async () => {
+      const { error } = await supabase
+        .from("style_guides")
+        .update({ content: styleGuide })
+        .eq("id", 4);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      toast({
+        title: "Success",
+        description: "Style guide updated successfully",
+      });
+      setIsEditingGuide(false);
+    },
+    onError: (error) => {
+      toast({
+        title: "Error",
+        description: "Failed to update style guide",
+        variant: "destructive",
+      });
+      console.error("Error updating style guide:", error);
     },
   });
 
@@ -84,6 +144,14 @@ const ReferenceDescriptions = () => {
 
   const handleGenerateAll = () => {
     generateMutation.mutate();
+  };
+
+  const handleSystemPromptSave = () => {
+    updateSystemPromptMutation.mutate();
+  };
+
+  const handleStyleGuideSave = () => {
+    updateStyleGuideMutation.mutate();
   };
 
   if (isLoading) {
