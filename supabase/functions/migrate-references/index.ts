@@ -36,7 +36,7 @@ Deno.serve(async (req) => {
 
     let processedCount = 0
 
-    // Process each watch and create/update reference descriptions
+    // Process each watch and create reference descriptions
     for (const watch of watches || []) {
       const { data: existingRef, error: checkError } = await supabaseClient
         .from('reference_descriptions')
@@ -54,8 +54,7 @@ Deno.serve(async (req) => {
           .from('reference_descriptions')
           .insert({
             brand: watch.brand,
-            reference_name: watch.model_reference,
-            reference_description: watch.description || null
+            reference_name: watch.model_reference
           })
 
         if (insertError) {
