@@ -31,17 +31,34 @@ Deno.serve(async (req) => {
 
     if (fetchError) {
       console.error('Error fetching watches:', fetchError)
-      throw fetchError
+      throw new Error('Failed to fetch watches: ' + fetchError.message)
     }
 
-    console.log(`Found ${watches?.length || 0} watches with model references`)
+    if (!watches || watches.length === 0) {
+      return new Response(
+        JSON.stringify({
+          success: false,
+          error: 'No watches found with model references to migrate'
+        }),
+        {
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          status: 400,
+        }
+      )
+    }
 
+    console.log(`Found ${watches.length} watches to process`)
     let processedCount = 0
 
     // Process each watch
     for (const watch of watches || []) {
       console.log('Processing watch:', watch)
       
+      if (!watch.brand || !watch.model_reference) {
+        console.warn('Skipping watch with missing brand or model_reference:', watch)
+        continue
+      }
+
       const { error: insertError } = await supabaseClient
         .from('reference_descriptions')
         .insert({
@@ -51,9 +68,22 @@ Deno.serve(async (req) => {
 
       if (insertError) {
         console.error('Insert error for watch:', watch, insertError)
-        continue
+        throw new Error(`Failed to insert reference for ${watch.model_reference}: ${insertError.message}`)
       }
       processedCount++
+    }
+
+    if (processedCount === 0) {
+      return new Response(
+        JSON.stringify({
+          success: false,
+          error: 'No references were successfully migrated'
+        }),
+        {
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          status: 400,
+        }
+      )
     }
 
     console.log(`Successfully processed ${processedCount} references`)
@@ -74,7 +104,7 @@ Deno.serve(async (req) => {
     return new Response(
       JSON.stringify({ 
         success: false,
-        error: error.message 
+        error: error.message || 'An unexpected error occurred during migration'
       }),
       {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },

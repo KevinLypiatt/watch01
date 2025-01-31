@@ -17,10 +17,12 @@ export const MigrationTrigger = () => {
       
       console.log('Response:', data, error)
       
-      if (error) throw error
+      if (error) {
+        throw new Error(error.message || 'Failed to call migration function')
+      }
       
-      if (!data.success) {
-        throw new Error(data.error || 'Migration failed')
+      if (!data?.success) {
+        throw new Error(data?.error || 'Migration failed')
       }
       
       toast({
@@ -30,7 +32,7 @@ export const MigrationTrigger = () => {
     } catch (error) {
       console.error('Migration error:', error)
       toast({
-        title: "Error",
+        title: "Migration Failed",
         description: error.message || "Failed to migrate references",
         variant: "destructive",
       })
