@@ -1,12 +1,44 @@
-// Update this page (the content is just a fallback if you fail to update the page)
+import { NavigationMenu } from "@/components/NavigationMenu";
+import { HeroSection } from "@/components/HeroSection";
+import { ProductShowcase } from "@/components/ProductShowcase";
+import { FeatureCard } from "@/components/FeatureCard";
+import { Footer } from "@/components/Footer";
 
 const Index = () => {
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-100">
-      <div className="text-center">
-        <h1 className="text-4xl font-bold mb-4">Welcome to Your Blank App</h1>
-        <p className="text-xl text-gray-600">Start building your amazing project here!</p>
-      </div>
+    <div className="min-h-screen bg-soft-white">
+      <NavigationMenu />
+      <HeroSection />
+      <section className="py-24 px-6">
+        <div className="max-w-7xl mx-auto">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+            {[
+              {
+                title: "Thoughtful Design",
+                description:
+                  "Every detail carefully considered for the perfect experience.",
+                icon: "✧",
+              },
+              {
+                title: "Premium Quality",
+                description:
+                  "Crafted with the finest materials and attention to detail.",
+                icon: "◆",
+              },
+              {
+                title: "Lasting Impact",
+                description:
+                  "Created to stand the test of time, both in style and function.",
+                icon: "○",
+              },
+            ].map((feature) => (
+              <FeatureCard key={feature.title} {...feature} />
+            ))}
+          </div>
+        </div>
+      </section>
+      <ProductShowcase />
+      <Footer />
     </div>
   );
 };
