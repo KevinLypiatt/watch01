@@ -33,41 +33,26 @@ Deno.serve(async (req) => {
 
     console.log('Found watches:', watches?.length || 0)
 
-    if (!watches || watches.length === 0) {
-      return new Response(
-        JSON.stringify({
-          message: 'No watches found',
-          count: 0
-        }),
-        {
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-          status: 200,
-        }
-      )
-    }
-
     // Create a reference description for each watch
-    const { error: insertError } = await supabaseClient
-      .from('reference_descriptions')
-      .insert(
-        watches.map(watch => ({
+    for (const watch of watches || []) {
+      const { error: insertError } = await supabaseClient
+        .from('reference_descriptions')
+        .insert({
           brand: watch.brand,
           reference_name: watch.model_reference,
           reference_description: null
-        }))
-      )
+        })
 
-    if (insertError) {
-      console.error('Insert error:', insertError)
-      throw insertError
+      if (insertError) {
+        console.error('Insert error for watch:', watch, insertError)
+        throw insertError
+      }
     }
-
-    console.log('Successfully processed watches:', watches.length)
 
     return new Response(
       JSON.stringify({
         message: 'Migration completed successfully',
-        count: watches.length
+        count: watches?.length || 0
       }),
       {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
