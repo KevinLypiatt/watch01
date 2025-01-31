@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { Button } from "@/components/ui/button"
 import { useToast } from "@/components/ui/use-toast"
+import { supabase } from "@/integrations/supabase/client"
 
 export const MigrationTrigger = () => {
   const [isLoading, setIsLoading] = useState(false)
@@ -9,28 +10,21 @@ export const MigrationTrigger = () => {
   const handleMigration = async () => {
     setIsLoading(true)
     try {
-      const response = await fetch(
-        'https://jemkiomfmxtintrfeiyf.supabase.co/functions/v1/migrate-references',
-        {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-        }
-      )
+      const { data, error } = await supabase.functions.invoke('migrate-references', {
+        method: 'POST',
+      })
       
-      const data = await response.json()
-      
-      if (!response.ok) throw new Error(data.error)
+      if (error) throw error
       
       toast({
         title: "Success",
         description: `Migration completed. ${data.count} references were processed.`,
       })
     } catch (error) {
+      console.error('Migration error:', error)
       toast({
         title: "Error",
-        description: error.message,
+        description: error.message || "Failed to migrate references",
         variant: "destructive",
       })
     } finally {
