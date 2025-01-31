@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
 import { ArrowLeft } from "lucide-react";
+import { PageHeader } from "@/components/PageHeader";
 
 const EditReferenceDescription = () => {
   const { id } = useParams();
@@ -28,7 +29,9 @@ const EditReferenceDescription = () => {
   });
 
   const mutation = useMutation({
-    mutationFn: async (updatedReference: any) => {
+    mutationF
+
+n: async (updatedReference: any) => {
       const { error } = await supabase
         .from("reference_descriptions")
         .update(updatedReference)
@@ -71,43 +74,46 @@ const EditReferenceDescription = () => {
   }
 
   return (
-    <div className="container mx-auto py-10">
-      <Button
-        variant="ghost"
-        onClick={() => navigate("/reference-descriptions")}
-        className="mb-6"
-      >
-        <ArrowLeft className="mr-2" />
-        Back to References
-      </Button>
-      <h1 className="text-2xl font-bold mb-6">Edit Reference Description</h1>
-      <form onSubmit={handleSubmit} className="space-y-6">
-        <div>
-          <label className="block text-sm font-medium mb-2">Brand</label>
-          <Input
-            name="brand"
-            defaultValue={reference?.brand || ""}
-            className="w-full"
-          />
-        </div>
-        <div>
-          <label className="block text-sm font-medium mb-2">Reference Name</label>
-          <Input
-            name="reference_name"
-            defaultValue={reference?.reference_name || ""}
-            className="w-full"
-          />
-        </div>
-        <div>
-          <label className="block text-sm font-medium mb-2">Description</label>
-          <Textarea
-            name="reference_description"
-            defaultValue={reference?.reference_description || ""}
-            className="w-full min-h-[200px]"
-          />
-        </div>
-        <Button type="submit">Save Changes</Button>
-      </form>
+    <div>
+      <PageHeader />
+      <div className="container mx-auto py-20">
+        <Button
+          variant="ghost"
+          onClick={() => navigate("/reference-descriptions")}
+          className="mb-6"
+        >
+          <ArrowLeft className="mr-2" />
+          Back to References
+        </Button>
+        <h1 className="text-2xl font-bold mb-6">Edit Reference Description</h1>
+        <form onSubmit={handleSubmit} className="space-y-6">
+          <div>
+            <label className="block text-sm font-medium mb-2">Brand</label>
+            <Input
+              name="brand"
+              defaultValue={reference?.brand || ""}
+              className="w-full"
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium mb-2">Reference Name</label>
+            <Input
+              name="reference_name"
+              defaultValue={reference?.reference_name || ""}
+              className="w-full"
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium mb-2">Description</label>
+            <Textarea
+              name="reference_description"
+              defaultValue={reference?.reference_description || ""}
+              className="w-full min-h-[200px]"
+            />
+          </div>
+          <Button type="submit">Save Changes</Button>
+        </form>
+      </div>
     </div>
   );
 };

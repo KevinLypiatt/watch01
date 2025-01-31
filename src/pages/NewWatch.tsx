@@ -6,12 +6,25 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, Loader } from "lucide-react";
+import { PageHeader } from "@/components/PageHeader";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from "@/components/ui/dialog";
 
 const NewWatch = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const [formData, setFormData] = useState<any>({});
+  const [isGenerating, setIsGenerating] = useState(false);
+  const [isPromptDialogOpen, setIsPromptDialogOpen] = useState(false);
+  const [isGuideDialogOpen, setIsGuideDialogOpen] = useState(false);
+  const [promptText, setPromptText] = useState("");
+  const [guideText, setGuideText] = useState("");
 
   const { data: styleGuides, isLoading: loadingGuides } = useQuery({
     queryKey: ["styleGuides"],
@@ -40,6 +53,8 @@ const NewWatch = () => {
         title: "Success",
         description: "Style guide updated successfully",
       });
+      setIsPromptDialogOpen(false);
+      setIsGuideDialogOpen(false);
     },
   });
 
@@ -61,6 +76,15 @@ const NewWatch = () => {
         title: "Success",
         description: "Description generated successfully",
       });
+      setIsGenerating(false);
+    },
+    onError: (error) => {
+      toast({
+        title: "Error",
+        description: "Failed to generate description",
+        variant: "destructive",
+      });
+      setIsGenerating(false);
     },
   });
 
@@ -91,14 +115,18 @@ const NewWatch = () => {
   const handleStyleGuideEdit = (name: string) => {
     const guide = styleGuides?.find(g => g.name === name);
     if (guide) {
-      const newContent = prompt("Edit style guide:", guide.content);
-      if (newContent) {
-        updateStyleGuideMutation.mutate({ name, content: newContent });
+      if (name === 'watch_description_system_prompt') {
+        setPromptText(guide.content);
+        setIsPromptDialogOpen(true);
+      } else {
+        setGuideText(guide.content);
+        setIsGuideDialogOpen(true);
       }
     }
   };
 
   const handleGenerateDescription = () => {
+    setIsGenerating(true);
     generateDescriptionMutation.mutate(formData);
   };
 
@@ -108,115 +136,178 @@ const NewWatch = () => {
   };
 
   return (
-    <div className="container mx-auto py-10">
-      <Button
-        variant="ghost"
-        onClick={() => navigate("/watch-list")}
-        className="mb-6"
-      >
-        <ArrowLeft className="mr-2" />
-        Back to Watch List
-      </Button>
-      <h1 className="text-2xl font-bold mb-6">New Watch</h1>
-      <form onSubmit={handleSubmit} className="space-y-6">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div>
-            <label className="block text-sm font-medium mb-2">Brand</label>
-            <Input
-              name="brand"
-              onChange={handleInputChange}
-            />
+    <div>
+      <PageHeader />
+      <div className="container mx-auto py-20">
+        <Button
+          variant="ghost"
+          onClick={() => navigate("/watch-list")}
+          className="mb-6"
+        >
+          <ArrowLeft className="mr-2" />
+          Back to Watch List
+        </Button>
+        <h1 className="text-2xl font-bold mb-6">New Watch</h1>
+        <form onSubmit={handleSubmit} className="space-y-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div>
+              <label className="block text-sm font-medium mb-2">Brand</label>
+              <Input
+                name="brand"
+                onChange={handleInputChange}
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium mb-2">Model Name</label>
+              <Input
+                name="model_name"
+                onChange={handleInputChange}
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium mb-2">Model Reference</label>
+              <Input
+                name="model_reference"
+                onChange={handleInputChange}
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium mb-2">Case Material</label>
+              <Input
+                name="case_material"
+                onChange={handleInputChange}
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium mb-2">Year</label>
+              <Input
+                name="year"
+                type="number"
+                onChange={handleInputChange}
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium mb-2">Movement Type</label>
+              <Input
+                name="movement_type"
+                onChange={handleInputChange}
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium mb-2">Listing Reference</label>
+              <Input
+                name="listing_reference"
+                onChange={handleInputChange}
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium mb-2">Condition</label>
+              <Input
+                name="condition"
+                onChange={handleInputChange}
+              />
+            </div>
           </div>
           <div>
-            <label className="block text-sm font-medium mb-2">Model Name</label>
-            <Input
-              name="model_name"
+            <label className="block text-sm font-medium mb-2">Additional Information</label>
+            <Textarea
+              name="additional_information"
               onChange={handleInputChange}
+              className="min-h-[100px]"
             />
+          </div>
+          <div className="flex gap-4 mb-4">
+            <Button
+              type="button"
+              onClick={() => handleStyleGuideEdit('watch_description_system_prompt')}
+            >
+              Edit System Prompt
+            </Button>
+            <Button
+              type="button"
+              onClick={() => handleStyleGuideEdit('watch_description_guide')}
+            >
+              Edit Style Guide
+            </Button>
+            <Button
+              type="button"
+              onClick={handleGenerateDescription}
+              disabled={isGenerating}
+            >
+              {isGenerating ? (
+                <>
+                  <Loader className="mr-2 h-4 w-4 animate-spin" />
+                  Working...
+                </>
+              ) : (
+                "Generate Description"
+              )}
+            </Button>
           </div>
           <div>
-            <label className="block text-sm font-medium mb-2">Model Reference</label>
-            <Input
-              name="model_reference"
+            <label className="block text-sm font-medium mb-2">Description</label>
+            <Textarea
+              name="description"
+              value={formData.description || ""}
               onChange={handleInputChange}
+              className="min-h-[200px]"
             />
           </div>
-          <div>
-            <label className="block text-sm font-medium mb-2">Case Material</label>
-            <Input
-              name="case_material"
-              onChange={handleInputChange}
+          <Button type="submit">Save New Watch</Button>
+        </form>
+
+        <Dialog open={isPromptDialogOpen} onOpenChange={setIsPromptDialogOpen}>
+          <DialogContent className="max-w-3xl">
+            <DialogHeader>
+              <DialogTitle>Edit System Prompt</DialogTitle>
+            </DialogHeader>
+            <Textarea
+              value={promptText}
+              onChange={(e) => setPromptText(e.target.value)}
+              className="min-h-[300px]"
             />
-          </div>
-          <div>
-            <label className="block text-sm font-medium mb-2">Year</label>
-            <Input
-              name="year"
-              type="number"
-              onChange={handleInputChange}
+            <DialogFooter>
+              <Button onClick={() => setIsPromptDialogOpen(false)} variant="outline">
+                Cancel
+              </Button>
+              <Button
+                onClick={() => updateStyleGuideMutation.mutate({
+                  name: 'watch_description_system_prompt',
+                  content: promptText
+                })}
+              >
+                Save Changes
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+
+        <Dialog open={isGuideDialogOpen} onOpenChange={setIsGuideDialogOpen}>
+          <DialogContent className="max-w-3xl">
+            <DialogHeader>
+              <DialogTitle>Edit Style Guide</DialogTitle>
+            </DialogHeader>
+            <Textarea
+              value={guideText}
+              onChange={(e) => setGuideText(e.target.value)}
+              className="min-h-[300px]"
             />
-          </div>
-          <div>
-            <label className="block text-sm font-medium mb-2">Movement Type</label>
-            <Input
-              name="movement_type"
-              onChange={handleInputChange}
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium mb-2">Listing Reference</label>
-            <Input
-              name="listing_reference"
-              onChange={handleInputChange}
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium mb-2">Condition</label>
-            <Input
-              name="condition"
-              onChange={handleInputChange}
-            />
-          </div>
-        </div>
-        <div>
-          <label className="block text-sm font-medium mb-2">Additional Information</label>
-          <Textarea
-            name="additional_information"
-            onChange={handleInputChange}
-            className="min-h-[100px]"
-          />
-        </div>
-        <div className="flex gap-4 mb-4">
-          <Button
-            type="button"
-            onClick={() => handleStyleGuideEdit('watch_description_system_prompt')}
-          >
-            Edit System Prompt
-          </Button>
-          <Button
-            type="button"
-            onClick={() => handleStyleGuideEdit('watch_description_guide')}
-          >
-            Edit Style Guide
-          </Button>
-          <Button
-            type="button"
-            onClick={handleGenerateDescription}
-          >
-            Generate Description
-          </Button>
-        </div>
-        <div>
-          <label className="block text-sm font-medium mb-2">Description</label>
-          <Textarea
-            name="description"
-            value={formData.description || ""}
-            onChange={handleInputChange}
-            className="min-h-[200px]"
-          />
-        </div>
-        <Button type="submit">Save New Watch</Button>
-      </form>
+            <DialogFooter>
+              <Button onClick={() => setIsGuideDialogOpen(false)} variant="outline">
+                Cancel
+              </Button>
+              <Button
+                onClick={() => updateStyleGuideMutation.mutate({
+                  name: 'watch_description_guide',
+                  content: guideText
+                })}
+              >
+                Save Changes
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+      </div>
     </div>
   );
 };

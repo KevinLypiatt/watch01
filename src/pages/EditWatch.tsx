@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
 import { ArrowLeft } from "lucide-react";
+import { PageHeader } from "@/components/PageHeader";
 
 const EditWatch = () => {
   const { id } = useParams();
@@ -75,8 +76,8 @@ const EditWatch = () => {
       movement_type: formData.get("movement_type"),
       listing_reference: formData.get("listing_reference"),
       condition: formData.get("condition"),
-      description: formData.get("description"),
       additional_information: formData.get("additional_information"),
+      description: formData.get("description"),
     };
     mutation.mutate(updatedWatch);
   };
@@ -90,94 +91,97 @@ const EditWatch = () => {
   }
 
   return (
-    <div className="container mx-auto py-10">
-      <Button
-        variant="ghost"
-        onClick={() => navigate("/watch-list")}
-        className="mb-6"
-      >
-        <ArrowLeft className="mr-2" />
-        Back to Watch List
-      </Button>
-      <h1 className="text-2xl font-bold mb-6">Edit Watch</h1>
-      <form onSubmit={handleSubmit} className="space-y-6">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+    <div>
+      <PageHeader />
+      <div className="container mx-auto py-20">
+        <Button
+          variant="ghost"
+          onClick={() => navigate("/watch-list")}
+          className="mb-6"
+        >
+          <ArrowLeft className="mr-2" />
+          Back to Watch List
+        </Button>
+        <h1 className="text-2xl font-bold mb-6">Edit Watch</h1>
+        <form onSubmit={handleSubmit} className="space-y-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div>
+              <label className="block text-sm font-medium mb-2">Brand</label>
+              <Input
+                name="brand"
+                defaultValue={watch?.brand || ""}
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium mb-2">Model Name</label>
+              <Input
+                name="model_name"
+                defaultValue={watch?.model_name || ""}
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium mb-2">Model Reference</label>
+              <Input
+                name="model_reference"
+                defaultValue={watch?.model_reference || ""}
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium mb-2">Case Material</label>
+              <Input
+                name="case_material"
+                defaultValue={watch?.case_material || ""}
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium mb-2">Year</label>
+              <Input
+                name="year"
+                type="number"
+                defaultValue={watch?.year || ""}
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium mb-2">Movement Type</label>
+              <Input
+                name="movement_type"
+                defaultValue={watch?.movement_type || ""}
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium mb-2">Listing Reference</label>
+              <Input
+                name="listing_reference"
+                defaultValue={watch?.listing_reference || ""}
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium mb-2">Condition</label>
+              <Input
+                name="condition"
+                defaultValue={watch?.condition || ""}
+              />
+            </div>
+          </div>
           <div>
-            <label className="block text-sm font-medium mb-2">Brand</label>
-            <Input
-              name="brand"
-              defaultValue={watch?.brand || ""}
+            <label className="block text-sm font-medium mb-2">Additional Information</label>
+            <Textarea
+              name="additional_information"
+              defaultValue={watch?.additional_information || ""}
+              className="min-h-[100px]"
             />
           </div>
           <div>
-            <label className="block text-sm font-medium mb-2">Model Name</label>
-            <Input
-              name="model_name"
-              defaultValue={watch?.model_name || ""}
+            <label className="block text-sm font-medium mb-2">Description</label>
+            <Textarea
+              name="description"
+              defaultValue={watch?.description || ""}
+              className="min-h-[200px]"
             />
           </div>
-          <div>
-            <label className="block text-sm font-medium mb-2">Model Reference</label>
-            <Input
-              name="model_reference"
-              defaultValue={watch?.model_reference || ""}
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium mb-2">Case Material</label>
-            <Input
-              name="case_material"
-              defaultValue={watch?.case_material || ""}
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium mb-2">Year</label>
-            <Input
-              name="year"
-              type="number"
-              defaultValue={watch?.year || ""}
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium mb-2">Movement Type</label>
-            <Input
-              name="movement_type"
-              defaultValue={watch?.movement_type || ""}
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium mb-2">Listing Reference</label>
-            <Input
-              name="listing_reference"
-              defaultValue={watch?.listing_reference || ""}
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium mb-2">Condition</label>
-            <Input
-              name="condition"
-              defaultValue={watch?.condition || ""}
-            />
-          </div>
-        </div>
-        <div>
-          <label className="block text-sm font-medium mb-2">Additional Information</label>
-          <Textarea
-            name="additional_information"
-            defaultValue={watch?.additional_information || ""}
-            className="min-h-[100px]"
-          />
-        </div>
-        <div>
-          <label className="block text-sm font-medium mb-2">Description</label>
-          <Textarea
-            name="description"
-            defaultValue={watch?.description || ""}
-            className="min-h-[200px]"
-          />
-        </div>
-        <Button type="submit">Save Changes</Button>
-      </form>
+          <Button type="submit">Save Changes</Button>
+        </form>
+      </div>
     </div>
   );
 };
