@@ -57,18 +57,27 @@ const ReferenceDescriptions = () => {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("style_guides")
-        .select("*");
+        .select("*")
+        .in("id", [4, 5]);
       if (error) throw error;
+      
+      // Set the content for system prompt (id: 5) and style guide (id: 4)
+      const systemPromptGuide = data?.find(guide => guide.id === 5);
+      const styleGuideContent = data?.find(guide => guide.id === 4);
+      
+      if (systemPromptGuide) setSystemPrompt(systemPromptGuide.content);
+      if (styleGuideContent) setStyleGuide(styleGuideContent.content);
+      
       return data || [];
     },
   });
 
   const updateStyleGuideMutation = useMutation({
-    mutationFn: async ({ name, content }: { name: string; content: string }) => {
+    mutationFn: async ({ id, content }: { id: number; content: string }) => {
       const { error } = await supabase
         .from("style_guides")
         .update({ content })
-        .eq("name", name);
+        .eq("id", id);
       if (error) throw error;
     },
     onSuccess: () => {
@@ -89,31 +98,19 @@ const ReferenceDescriptions = () => {
     },
   });
 
-  const generateMutation = useMutation({
-    mutationFn: async () => {
-      const { data, error } = await supabase.functions.invoke('generate-reference-descriptions', {
-        body: { generateAll: true },
-      });
-      if (error) throw error;
-      return data;
-    },
-    onSuccess: () => {
-      toast({
-        title: "Success",
-        description: "Reference descriptions generated successfully",
-      });
-      setIsGenerating(false);
-    },
-    onError: (error) => {
-      toast({
-        title: "Error",
-        description: "Failed to generate reference descriptions",
-        variant: "destructive",
-      });
-      console.error("Error generating descriptions:", error);
-      setIsGenerating(false);
-    },
-  });
+  const handleSystemPromptSave = () => {
+    updateStyleGuideMutation.mutate({
+      id: 5,
+      content: systemPrompt,
+    });
+  };
+
+  const handleStyleGuideSave = () => {
+    updateStyleGuideMutation.mutate({
+      id: 4,
+      content: styleGuide,
+    });
+  };
 
   const handleSort = (column: string) => {
     if (sortColumn === column) {
@@ -122,20 +119,6 @@ const ReferenceDescriptions = () => {
       setSortColumn(column);
       setSortDirection('asc');
     }
-  };
-
-  const handleSystemPromptSave = () => {
-    updateStyleGuideMutation.mutate({
-      name: "reference_description_system_prompt",
-      content: systemPrompt,
-    });
-  };
-
-  const handleStyleGuideSave = () => {
-    updateStyleGuideMutation.mutate({
-      name: "reference_description_guide",
-      content: styleGuide,
-    });
   };
 
   const handleSearch = () => {

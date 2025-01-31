@@ -36,9 +36,25 @@ export const ReferenceDescriptionHeader = ({
   const navigate = useNavigate();
 
   return (
-    <div className="flex justify-between items-center mb-6">
-      <h1 className="text-2xl font-bold">Reference Descriptions</h1>
-      <div className="space-x-4">
+    <div className="flex flex-col gap-4 mb-6">
+      <div className="flex justify-between items-center">
+        <h1 className="text-2xl font-bold">Reference Descriptions</h1>
+      </div>
+      <div className="flex justify-end gap-4">
+        <Button
+          variant="outline"
+          className="bg-[#f3f3f3] hover:bg-[#e5e5e5]"
+          onClick={handleGenerateAll}
+          disabled={isGenerating}
+        >
+          {isGenerating ? "Working..." : "Generate Reference Descriptions"}
+        </Button>
+        <Button onClick={() => navigate("/reference-descriptions/new")}>
+          <Plus className="mr-2 h-4 w-4" />
+          Add New Description
+        </Button>
+      </div>
+      <div className="flex justify-end gap-4">
         <Dialog open={isEditingPrompt} onOpenChange={setIsEditingPrompt}>
           <DialogTrigger asChild>
             <Button
@@ -67,12 +83,12 @@ export const ReferenceDescriptionHeader = ({
               variant="outline"
               className="bg-[#f3f3f3] hover:bg-[#e5e5e5]"
             >
-              Edit Reference Style Guide
+              Edit Style Guide
             </Button>
           </DialogTrigger>
           <DialogContent>
             <DialogHeader>
-              <DialogTitle>Edit Reference Style Guide</DialogTitle>
+              <DialogTitle>Edit Style Guide</DialogTitle>
             </DialogHeader>
             <Textarea
               value={styleGuide}
@@ -82,19 +98,6 @@ export const ReferenceDescriptionHeader = ({
             <Button onClick={handleStyleGuideSave}>Save Changes</Button>
           </DialogContent>
         </Dialog>
-
-        <Button
-          variant="outline"
-          className="bg-[#f3f3f3] hover:bg-[#e5e5e5]"
-          onClick={handleGenerateAll}
-          disabled={isGenerating}
-        >
-          {isGenerating ? "Working..." : "Generate Reference Descriptions"}
-        </Button>
-        <Button onClick={() => navigate("/reference-descriptions/new")}>
-          <Plus className="mr-2 h-4 w-4" />
-          Add New Description
-        </Button>
       </div>
     </div>
   );
