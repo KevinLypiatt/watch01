@@ -10,11 +10,18 @@ export const MigrationTrigger = () => {
   const handleMigration = async () => {
     setIsLoading(true)
     try {
+      console.log('Calling migrate-references function...')
       const { data, error } = await supabase.functions.invoke('migrate-references', {
         method: 'POST',
       })
       
+      console.log('Response:', data, error)
+      
       if (error) throw error
+      
+      if (!data.success) {
+        throw new Error(data.error || 'Migration failed')
+      }
       
       toast({
         title: "Success",

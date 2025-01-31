@@ -11,6 +11,8 @@ Deno.serve(async (req) => {
   }
 
   try {
+    console.log('Starting migration process...')
+    
     const supabaseClient = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
       Deno.env.get('SUPABASE_ANON_KEY') ?? '',
@@ -24,7 +26,7 @@ Deno.serve(async (req) => {
     // Get all watches that have a model_reference
     const { data: watches, error: fetchError } = await supabaseClient
       .from('watches')
-      .select('*')
+      .select('brand, model_reference')
       .not('model_reference', 'is', null)
 
     if (fetchError) {
@@ -36,8 +38,10 @@ Deno.serve(async (req) => {
 
     let processedCount = 0
 
-    // Process each watch and create reference descriptions
+    // Process each watch
     for (const watch of watches || []) {
+      console.log('Processing watch:', watch)
+      
       const { error: insertError } = await supabaseClient
         .from('reference_descriptions')
         .insert({
@@ -52,8 +56,11 @@ Deno.serve(async (req) => {
       processedCount++
     }
 
+    console.log(`Successfully processed ${processedCount} references`)
+
     return new Response(
       JSON.stringify({
+        success: true,
         message: 'Migration completed successfully',
         count: processedCount
       }),
@@ -65,7 +72,10 @@ Deno.serve(async (req) => {
   } catch (error) {
     console.error('Migration error:', error)
     return new Response(
-      JSON.stringify({ error: error.message }),
+      JSON.stringify({ 
+        success: false,
+        error: error.message 
+      }),
       {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         status: 400,
