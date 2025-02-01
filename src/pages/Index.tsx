@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import { List, Database, Plus, FilePlus, BookOpen } from "lucide-react";
+import { List, Database, Plus, FilePlus, BookOpen, Download } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
@@ -57,6 +57,58 @@ const Index = () => {
     updateIntroMutation.mutate(introContent);
   };
 
+  const exportTableToCSV = async (tableName: string) => {
+    try {
+      const { data, error } = await supabase
+        .from(tableName)
+        .select('*');
+      
+      if (error) throw error;
+      
+      if (!data || data.length === 0) {
+        toast({
+          title: "No Data",
+          description: `No data found in ${tableName} table`,
+          variant: "destructive",
+        });
+        return;
+      }
+
+      // Convert data to CSV
+      const headers = Object.keys(data[0]);
+      const csvContent = [
+        headers.join(','),
+        ...data.map(row => 
+          headers.map(header => 
+            JSON.stringify(row[header] ?? '')
+          ).join(',')
+        )
+      ].join('\n');
+
+      // Create and download file
+      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+      const link = document.createElement('a');
+      const url = URL.createObjectURL(blob);
+      link.setAttribute('href', url);
+      link.setAttribute('download', `${tableName}_export.csv`);
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+
+      toast({
+        title: "Success",
+        description: `${tableName} exported successfully`,
+      });
+    } catch (error) {
+      console.error(`Error exporting ${tableName}:`, error);
+      toast({
+        title: "Error",
+        description: `Failed to export ${tableName}`,
+        variant: "destructive",
+      });
+    }
+  };
+
   return (
     <div className="min-h-screen bg-soft-white flex items-center justify-center">
       <div className="grid grid-cols-2 gap-6 max-w-2xl p-6">
@@ -86,7 +138,7 @@ const Index = () => {
         </Link>
         <Dialog open={isEditingIntro} onOpenChange={setIsEditingIntro}>
           <DialogTrigger asChild>
-            <Button variant="outline" className="w-full h-32 flex flex-col items-center justify-center gap-2 col-span-2">
+            <Button variant="outline" className="w-full h-32 flex flex-col items-center justify-center gap-2">
               <BookOpen className="w-8 h-8" />
               <span>Introduction and Guide</span>
             </Button>
@@ -105,6 +157,30 @@ const Index = () => {
             <Button onClick={handleIntroSave}>Save Changes</Button>
           </DialogContent>
         </Dialog>
+        <Button
+          variant="outline"
+          className="w-full h-32 flex flex-col items-center justify-center gap-2"
+          onClick={() => exportTableToCSV('style_guides')}
+        >
+          <Download className="w-8 h-8" />
+          <span>Export Style Guides</span>
+        </Button>
+        <Button
+          variant="outline"
+          className="w-full h-32 flex flex-col items-center justify-center gap-2"
+          onClick={() => exportTableToCSV('watches')}
+        >
+          <Download className="w-8 h-8" />
+          <span>Export Watches</span>
+        </Button>
+        <Button
+          variant="outline"
+          className="w-full h-32 flex flex-col items-center justify-center gap-2 col-span-2"
+          onClick={() => exportTableToCSV('reference_descriptions')}
+        >
+          <Download className="w-8 h-8" />
+          <span>Export References</span>
+        </Button>
       </div>
     </div>
   );
