@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useMutation } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { SystemPromptHeader } from "@/components/system-prompts/SystemPromptHeader";
@@ -7,7 +7,6 @@ import { SystemPromptSection } from "@/components/system-prompts/SystemPromptSec
 
 const SystemPrompts = () => {
   const { toast } = useToast();
-  const queryClient = useQueryClient();
   const [watchPrompt, setWatchPrompt] = useState("");
   const [referencePrompt, setReferencePrompt] = useState("");
 
@@ -19,7 +18,10 @@ const SystemPrompts = () => {
         .select("*")
         .in("id", [2, 5]);
       
-      if (error) throw error;
+      if (error) {
+        console.error("Error fetching system prompts:", error);
+        throw error;
+      }
       
       if (data) {
         const watchPromptData = data.find(prompt => prompt.id === 2);
@@ -33,12 +35,18 @@ const SystemPrompts = () => {
 
   const updatePromptMutation = useMutation({
     mutationFn: async ({ id, content }: { id: number; content: string }) => {
-      const { error } = await supabase
+      const { data, error } = await supabase
         .from("style_guides")
         .update({ content, updated_at: new Date().toISOString() })
-        .eq("id", id);
+        .eq("id", id)
+        .select();
       
-      if (error) throw error;
+      if (error) {
+        console.error("Error updating system prompt:", error);
+        throw error;
+      }
+      
+      return data;
     },
     onSuccess: () => {
       toast({
@@ -47,12 +55,12 @@ const SystemPrompts = () => {
       });
     },
     onError: (error) => {
+      console.error("Error in mutation:", error);
       toast({
         title: "Error",
         description: "Failed to update system prompt",
         variant: "destructive",
       });
-      console.error("Error updating system prompt:", error);
     },
   });
 

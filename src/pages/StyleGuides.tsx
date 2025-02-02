@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useMutation } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { StyleGuideHeader } from "@/components/style-guides/StyleGuideHeader";
@@ -7,7 +7,6 @@ import { StyleGuideSection } from "@/components/style-guides/StyleGuideSection";
 
 const StyleGuides = () => {
   const { toast } = useToast();
-  const queryClient = useQueryClient();
   const [watchGuide, setWatchGuide] = useState("");
   const [referenceGuide, setReferenceGuide] = useState("");
 
@@ -17,13 +16,16 @@ const StyleGuides = () => {
       const { data, error } = await supabase
         .from("style_guides")
         .select("*")
-        .in("id", [1, 8]);  // Changed from [1, 4] to [1, 8]
+        .in("id", [1, 8]);
       
-      if (error) throw error;
+      if (error) {
+        console.error("Error fetching style guides:", error);
+        throw error;
+      }
       
       if (data) {
         const watchGuideData = data.find(guide => guide.id === 1);
-        const referenceGuideData = data.find(guide => guide.id === 8);  // Changed from 4 to 8
+        const referenceGuideData = data.find(guide => guide.id === 8);
         if (!watchGuide) setWatchGuide(watchGuideData?.content || "");
         if (!referenceGuide) setReferenceGuide(referenceGuideData?.content || "");
       }
@@ -33,12 +35,18 @@ const StyleGuides = () => {
 
   const updateGuideMutation = useMutation({
     mutationFn: async ({ id, content }: { id: number; content: string }) => {
-      const { error } = await supabase
+      const { data, error } = await supabase
         .from("style_guides")
         .update({ content, updated_at: new Date().toISOString() })
-        .eq("id", id);
+        .eq("id", id)
+        .select();
       
-      if (error) throw error;
+      if (error) {
+        console.error("Error updating style guide:", error);
+        throw error;
+      }
+      
+      return data;
     },
     onSuccess: () => {
       toast({
@@ -47,12 +55,12 @@ const StyleGuides = () => {
       });
     },
     onError: (error) => {
+      console.error("Error in mutation:", error);
       toast({
         title: "Error",
         description: "Failed to update style guide",
         variant: "destructive",
       });
-      console.error("Error updating style guide:", error);
     },
   });
 
@@ -61,7 +69,7 @@ const StyleGuides = () => {
   };
 
   const handleReferenceGuideSave = () => {
-    updateGuideMutation.mutate({ id: 8, content: referenceGuide });  // Changed from 4 to 8
+    updateGuideMutation.mutate({ id: 8, content: referenceGuide });
   };
 
   return (
