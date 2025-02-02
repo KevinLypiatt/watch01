@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import { List, Database, Plus, FilePlus, BookOpen, Download } from "lucide-react";
+import { Plus, List, FilePlus, Database, BookOpen, FileText, Book } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
@@ -7,7 +7,6 @@ import { useState } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { exportTableToCSV } from "@/utils/csvExport";
 
 const Index = () => {
   const { toast } = useToast();
@@ -60,41 +59,59 @@ const Index = () => {
 
   return (
     <div className="min-h-screen bg-soft-white flex items-center justify-center">
-      <div className="grid grid-cols-2 gap-6 max-w-2xl p-6">
-        <Link to="/watch-list">
-          <Button variant="outline" className="w-full h-32 flex flex-col items-center justify-center gap-2">
-            <List className="w-8 h-8" />
-            <span>View Watch List</span>
-          </Button>
-        </Link>
-        <Link to="/reference-descriptions">
-          <Button variant="outline" className="w-full h-32 flex flex-col items-center justify-center gap-2">
-            <Database className="w-8 h-8" />
-            <span>View Reference List</span>
-          </Button>
-        </Link>
+      <div className="flex flex-col gap-4 w-64">
         <Link to="/watches/new">
-          <Button variant="outline" className="w-full h-32 flex flex-col items-center justify-center gap-2">
-            <Plus className="w-8 h-8" />
+          <Button variant="outline" className="w-full h-16 flex items-center justify-center gap-2">
+            <Plus className="w-5 h-5" />
             <span>Add New Watch</span>
           </Button>
         </Link>
+        
+        <Link to="/watch-list">
+          <Button variant="outline" className="w-full h-16 flex items-center justify-center gap-2">
+            <List className="w-5 h-5" />
+            <span>Watch List</span>
+          </Button>
+        </Link>
+        
         <Link to="/reference-descriptions/new">
-          <Button variant="outline" className="w-full h-32 flex flex-col items-center justify-center gap-2">
-            <FilePlus className="w-8 h-8" />
+          <Button variant="outline" className="w-full h-16 flex items-center justify-center gap-2">
+            <FilePlus className="w-5 h-5" />
             <span>Add New Reference</span>
           </Button>
         </Link>
+        
+        <Link to="/reference-descriptions">
+          <Button variant="outline" className="w-full h-16 flex items-center justify-center gap-2">
+            <Database className="w-5 h-5" />
+            <span>Reference List</span>
+          </Button>
+        </Link>
+        
+        <Link to="/system-prompts">
+          <Button variant="outline" className="w-full h-16 flex items-center justify-center gap-2">
+            <FileText className="w-5 h-5" />
+            <span>System Prompts</span>
+          </Button>
+        </Link>
+        
+        <Link to="/style-guides">
+          <Button variant="outline" className="w-full h-16 flex items-center justify-center gap-2">
+            <Book className="w-5 h-5" />
+            <span>Style Guides</span>
+          </Button>
+        </Link>
+        
         <Dialog open={isEditingIntro} onOpenChange={setIsEditingIntro}>
           <DialogTrigger asChild>
-            <Button variant="outline" className="w-full h-32 flex flex-col items-center justify-center gap-2">
-              <BookOpen className="w-8 h-8" />
-              <span>Introduction and Guide</span>
+            <Button variant="outline" className="w-full h-16 flex items-center justify-center gap-2">
+              <BookOpen className="w-5 h-5" />
+              <span>Instructions and Guide</span>
             </Button>
           </DialogTrigger>
           <DialogContent className="max-w-3xl max-h-[80vh]">
             <DialogHeader>
-              <DialogTitle>Introduction and Guide</DialogTitle>
+              <DialogTitle>Instructions and Guide</DialogTitle>
             </DialogHeader>
             <div className="overflow-y-auto">
               <Textarea
@@ -106,30 +123,6 @@ const Index = () => {
             <Button onClick={handleIntroSave}>Save Changes</Button>
           </DialogContent>
         </Dialog>
-        <Button
-          variant="outline"
-          className="w-full h-32 flex flex-col items-center justify-center gap-2"
-          onClick={() => exportTableToCSV("style_guides")}
-        >
-          <Download className="w-8 h-8" />
-          <span>Export Style Guides</span>
-        </Button>
-        <Button
-          variant="outline"
-          className="w-full h-32 flex flex-col items-center justify-center gap-2"
-          onClick={() => exportTableToCSV("watches")}
-        >
-          <Download className="w-8 h-8" />
-          <span>Export Watches</span>
-        </Button>
-        <Button
-          variant="outline"
-          className="w-full h-32 flex flex-col items-center justify-center gap-2 col-span-2"
-          onClick={() => exportTableToCSV("reference_descriptions")}
-        >
-          <Download className="w-8 h-8" />
-          <span>Export References</span>
-        </Button>
       </div>
     </div>
   );
