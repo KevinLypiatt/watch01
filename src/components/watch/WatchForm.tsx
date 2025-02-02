@@ -91,7 +91,7 @@ export const WatchForm = ({
         />
       </div>
       <Button type="submit" variant="outline" className="bg-[#f3f3f3] hover:bg-[#e5e5e5]">
-        Save New Watch
+        Save Watch
       </Button>
     </form>
   );

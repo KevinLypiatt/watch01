@@ -16,7 +16,7 @@ export const ReferenceDescriptionHeader = ({
       <div>
         <h1 className="text-2xl font-bold">Reference Descriptions</h1>
         <p className="text-muted-foreground">
-          Manage and generate reference descriptions
+          Manage and generate references
         </p>
       </div>
       <div className="flex gap-4">

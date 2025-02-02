@@ -61,7 +61,9 @@ export const ReferenceDescriptionForm = ({
         />
       </div>
       <div className="flex gap-4">
-        <Button type="submit">Create Reference Description</Button>
+        <Button type="submit" variant="outline" className="bg-[#f3f3f3] hover:bg-[#e5e5e5]">
+          Save Changes
+        </Button>
         <Button
           type="button"
           variant="outline"
