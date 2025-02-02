@@ -1,6 +1,6 @@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
-import { Edit, Trash, ArrowUpDown } from "lucide-react";
+import { Edit, Trash, ArrowUpDown, Check } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import {
   AlertDialog,
@@ -82,6 +82,10 @@ export const WatchListTable = ({
                 Year
                 <ArrowUpDown className="ml-2 h-4 w-4 inline" />
               </TableHead>
+              <TableHead onClick={() => handleSort('description')} className="cursor-pointer hover:bg-muted/50">
+                Description
+                <ArrowUpDown className="ml-2 h-4 w-4 inline" />
+              </TableHead>
               <TableHead className="w-[100px]">Actions</TableHead>
             </TableRow>
           </TableHeader>
@@ -94,6 +98,11 @@ export const WatchListTable = ({
                   <TableCell>{watch.model_reference || "-"}</TableCell>
                   <TableCell>{watch.case_material || "-"}</TableCell>
                   <TableCell>{watch.year || "-"}</TableCell>
+                  <TableCell>
+                    {watch.description ? (
+                      <Check className="h-4 w-4 text-green-500" />
+                    ) : null}
+                  </TableCell>
                   <TableCell>
                     <div className="flex gap-2">
                       <Button
@@ -116,7 +125,7 @@ export const WatchListTable = ({
               ))
             ) : (
               <TableRow>
-                <TableCell colSpan={6} className="text-center py-4">
+                <TableCell colSpan={7} className="text-center py-4">
                   No watches found
                 </TableCell>
               </TableRow>
