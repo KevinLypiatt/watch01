@@ -2,6 +2,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Button } from "@/components/ui/button";
 import { Edit, Trash, ArrowUpDown } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { useEffect, useRef } from "react";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -35,6 +36,23 @@ export const ReferenceDescriptionTable = ({
   const navigate = useNavigate();
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [selectedReferenceId, setSelectedReferenceId] = useState<number | null>(null);
+  const tableRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const lastEditedId = sessionStorage.getItem('lastEditedReferenceId');
+    if (lastEditedId) {
+      const row = document.getElementById(`reference-${lastEditedId}`);
+      if (row) {
+        row.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        // Highlight the row briefly
+        row.classList.add('bg-muted/50');
+        setTimeout(() => {
+          row.classList.remove('bg-muted/50');
+        }, 2000);
+      }
+      sessionStorage.removeItem('lastEditedReferenceId');
+    }
+  }, [references]);
 
   const onDeleteClick = (id: number) => {
     setSelectedReferenceId(id);
@@ -51,7 +69,7 @@ export const ReferenceDescriptionTable = ({
 
   return (
     <>
-      <div className="rounded-md border">
+      <div className="rounded-md border" ref={tableRef}>
         <Table>
           <TableHeader>
             <TableRow>
@@ -73,7 +91,11 @@ export const ReferenceDescriptionTable = ({
           <TableBody>
             {references && references.length > 0 ? (
               references.map((reference) => (
-                <TableRow key={reference.reference_id}>
+                <TableRow 
+                  key={reference.reference_id}
+                  id={`reference-${reference.reference_id}`}
+                  className="transition-colors duration-200"
+                >
                   <TableCell>{reference.brand || "-"}</TableCell>
                   <TableCell>{reference.reference_name || "-"}</TableCell>
                   <TableCell>{reference.reference_description || "-"}</TableCell>

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -57,6 +57,11 @@ const EditReferenceDescription = () => {
           ? "Reference description created successfully"
           : "Reference description updated successfully",
       });
+
+      // Store the reference ID before navigation
+      if (!isNewReference) {
+        sessionStorage.setItem('lastEditedReferenceId', id as string);
+      }
       navigate("/reference-descriptions");
     },
     onError: (error) => {

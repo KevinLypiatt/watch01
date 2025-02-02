@@ -51,6 +51,8 @@ const EditWatch = () => {
         title: "Success",
         description: "Watch updated successfully",
       });
+      // Store the watch ID before navigation
+      sessionStorage.setItem('lastEditedWatchId', watchId?.toString() || '');
       navigate("/watch-list");
     },
     onError: (error) => {
