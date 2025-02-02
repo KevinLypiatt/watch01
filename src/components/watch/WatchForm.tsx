@@ -3,6 +3,8 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { Loader } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/hooks/use-toast";
 
 interface WatchFormProps {
   formData: any;
@@ -19,6 +21,46 @@ export const WatchForm = ({
   isGenerating,
   handleSubmit
 }: WatchFormProps) => {
+  const { toast } = useToast();
+
+  const checkReferenceAndGenerate = async () => {
+    if (!formData.brand || !formData.model_reference) {
+      toast({
+        title: "Warning",
+        description: "Please enter both Brand and Model Reference",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    const { data: reference } = await supabase
+      .from('reference_descriptions')
+      .select('reference_description')
+      .eq('brand', formData.brand)
+      .eq('reference_name', formData.model_reference)
+      .single();
+
+    if (!reference) {
+      toast({
+        title: "Warning",
+        description: "No reference record for this watch",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (!reference.reference_description) {
+      toast({
+        title: "Warning",
+        description: "No reference description yet created",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    handleGenerateDescription();
+  };
+
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -27,12 +69,12 @@ export const WatchForm = ({
           <Input name="brand" onChange={handleInputChange} />
         </div>
         <div>
-          <label className="block text-sm font-medium mb-2">Model Name</label>
-          <Input name="model_name" onChange={handleInputChange} />
-        </div>
-        <div>
           <label className="block text-sm font-medium mb-2">Model Reference</label>
           <Input name="model_reference" onChange={handleInputChange} />
+        </div>
+        <div>
+          <label className="block text-sm font-medium mb-2">Model Name</label>
+          <Input name="model_name" onChange={handleInputChange} />
         </div>
         <div>
           <label className="block text-sm font-medium mb-2">Case Material</label>
@@ -66,7 +108,7 @@ export const WatchForm = ({
       <div className="flex gap-4 mb-4">
         <Button
           type="button"
-          onClick={handleGenerateDescription}
+          onClick={checkReferenceAndGenerate}
           disabled={isGenerating}
           variant="outline"
           className="bg-[#f3f3f3] hover:bg-[#e5e5e5]"
