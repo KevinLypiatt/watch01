@@ -90,7 +90,9 @@ export const WatchForm = ({
           className="min-h-[200px]"
         />
       </div>
-      <Button type="submit">Save New Watch</Button>
+      <Button type="submit" variant="outline" className="bg-[#f3f3f3] hover:bg-[#e5e5e5]">
+        Save New Watch
+      </Button>
     </form>
   );
 };
