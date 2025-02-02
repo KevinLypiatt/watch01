@@ -20,7 +20,7 @@ serve(async (req) => {
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     );
 
-    const { referenceId, generateAll } = await req.json();
+    const { referenceId, generateAll, brand, reference_name } = await req.json();
     
     // Get the system prompt
     const { data: styleGuides } = await supabaseClient
@@ -63,13 +63,16 @@ serve(async (req) => {
       const generatedDescription = data.content[0].text;
       console.log('Generated description:', generatedDescription);
 
-      // Update the reference description
-      const { error: updateError } = await supabaseClient
-        .from('reference_descriptions')
-        .update({ reference_description: generatedDescription })
-        .eq('reference_id', reference.reference_id);
+      // Only update the database if we have a reference ID
+      if (reference.reference_id) {
+        const { error: updateError } = await supabaseClient
+          .from('reference_descriptions')
+          .update({ reference_description: generatedDescription })
+          .eq('reference_id', reference.reference_id);
 
-      if (updateError) throw updateError;
+        if (updateError) throw updateError;
+      }
+      
       return generatedDescription;
     }
 
@@ -92,8 +95,8 @@ serve(async (req) => {
         JSON.stringify({ message: `Generated descriptions for ${references?.length} references` }),
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
-    } else {
-      // Generate description for a single reference
+    } else if (referenceId) {
+      // Generate description for an existing reference
       const { data: reference } = await supabaseClient
         .from('reference_descriptions')
         .select('*')
@@ -108,6 +111,16 @@ serve(async (req) => {
         JSON.stringify({ description }),
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
+    } else if (brand && reference_name) {
+      // Generate description for a new reference
+      const description = await generateDescription({ brand, reference_name });
+      
+      return new Response(
+        JSON.stringify({ description }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    } else {
+      throw new Error('Invalid request: either referenceId or brand and reference_name must be provided');
     }
   } catch (error) {
     console.error('Error in generate-reference-descriptions function:', error);
