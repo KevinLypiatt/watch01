@@ -1,11 +1,11 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import { useMutation } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
+import { Home } from "lucide-react";
+import { ReferenceDescriptionForm } from "@/components/reference-descriptions/ReferenceDescriptionForm";
 
 const NewReferenceDescription = () => {
   const navigate = useNavigate();
@@ -13,6 +13,7 @@ const NewReferenceDescription = () => {
   const [brand, setBrand] = useState("");
   const [referenceName, setReferenceName] = useState("");
   const [description, setDescription] = useState("");
+  const [isGenerating, setIsGenerating] = useState(false);
 
   const createMutation = useMutation({
     mutationFn: async () => {
@@ -44,63 +45,72 @@ const NewReferenceDescription = () => {
     },
   });
 
+  const generateDescriptionMutation = useMutation({
+    mutationFn: async () => {
+      const { data, error } = await supabase.functions.invoke('generate-reference-descriptions', {
+        body: { 
+          referenceId: null,
+          brand,
+          reference_name: referenceName
+        }
+      });
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: (data) => {
+      setDescription(data.description);
+      toast({
+        title: "Success",
+        description: "Description generated successfully",
+      });
+      setIsGenerating(false);
+    },
+    onError: (error) => {
+      toast({
+        title: "Error",
+        description: "Failed to generate description",
+        variant: "destructive",
+      });
+      setIsGenerating(false);
+      console.error("Error generating description:", error);
+    },
+  });
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     createMutation.mutate();
   };
 
+  const handleGenerateDescription = () => {
+    setIsGenerating(true);
+    generateDescriptionMutation.mutate();
+  };
+
   return (
     <div className="container mx-auto py-6">
+      <div className="flex justify-between items-center mb-6">
+        <Link to="/" className="hover:text-primary">
+          <Home className="w-6 h-6" />
+        </Link>
+        <Link to="/reference-descriptions" className="text-primary hover:underline">
+          To Reference List
+        </Link>
+      </div>
       <div className="mb-6">
         <h1 className="text-2xl font-bold">Add New Reference Description</h1>
         <p className="text-muted-foreground">Create a new reference description</p>
       </div>
-      <form onSubmit={handleSubmit} className="max-w-2xl space-y-4">
-        <div>
-          <label htmlFor="brand" className="block text-sm font-medium mb-1">
-            Brand
-          </label>
-          <Input
-            id="brand"
-            value={brand}
-            onChange={(e) => setBrand(e.target.value)}
-            required
-          />
-        </div>
-        <div>
-          <label htmlFor="referenceName" className="block text-sm font-medium mb-1">
-            Reference Name
-          </label>
-          <Input
-            id="referenceName"
-            value={referenceName}
-            onChange={(e) => setReferenceName(e.target.value)}
-            required
-          />
-        </div>
-        <div>
-          <label htmlFor="description" className="block text-sm font-medium mb-1">
-            Description
-          </label>
-          <Textarea
-            id="description"
-            value={description}
-            onChange={(e) => setDescription(e.target.value)}
-            className="min-h-[200px]"
-            required
-          />
-        </div>
-        <div className="flex gap-4">
-          <Button type="submit">Create Reference Description</Button>
-          <Button
-            type="button"
-            variant="outline"
-            onClick={() => navigate("/reference-descriptions")}
-          >
-            Cancel
-          </Button>
-        </div>
-      </form>
+      <ReferenceDescriptionForm
+        brand={brand}
+        referenceName={referenceName}
+        description={description}
+        isGenerating={isGenerating}
+        handleBrandChange={(e) => setBrand(e.target.value)}
+        handleReferenceNameChange={(e) => setReferenceName(e.target.value)}
+        handleDescriptionChange={(e) => setDescription(e.target.value)}
+        handleSubmit={handleSubmit}
+        handleGenerateDescription={handleGenerateDescription}
+      />
     </div>
   );
 };
