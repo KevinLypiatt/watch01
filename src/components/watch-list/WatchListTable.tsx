@@ -108,7 +108,7 @@ export const WatchListTable = ({
                       <Button
                         variant="ghost"
                         size="icon"
-                        onClick={() => navigate(`/watches/${watch.id}`)}
+                        onClick={() => navigate(`/edit-watch/${watch.id}`)}
                       >
                         <Edit className="h-4 w-4" />
                       </Button>
