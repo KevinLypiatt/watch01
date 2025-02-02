@@ -61,7 +61,7 @@ export const ReferenceDescriptionForm = ({
         />
       </div>
       <div className="flex gap-4">
-        <Button type="submit" variant="outline" className="bg-[#f3f3f3] hover:bg-[#e5e5e5]">
+        <Button type="submit">
           Save Changes
         </Button>
         <Button
@@ -69,6 +69,7 @@ export const ReferenceDescriptionForm = ({
           variant="outline"
           onClick={handleGenerateDescription}
           disabled={isGenerating}
+          className="bg-[#f3f3f3] hover:bg-[#e5e5e5]"
         >
           {isGenerating ? "Generating..." : "Generate Reference Description"}
         </Button>

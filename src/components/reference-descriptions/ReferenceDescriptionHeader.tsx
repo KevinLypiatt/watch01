@@ -1,5 +1,5 @@
 import { Button } from "@/components/ui/button";
-import { Plus, Home } from "lucide-react";
+import { Plus } from "lucide-react";
 import { Link } from "react-router-dom";
 
 interface ReferenceDescriptionHeaderProps {
@@ -30,6 +30,7 @@ export const ReferenceDescriptionHeader = ({
           variant="outline"
           onClick={handleGenerateAll}
           disabled={isGenerating}
+          className="bg-[#f3f3f3] hover:bg-[#e5e5e5]"
         >
           {isGenerating ? "Generating..." : "Generate All Descriptions"}
         </Button>
