@@ -1,24 +1,20 @@
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { Edit, Save, Download, Copy } from "lucide-react";
+import { Save, Download, Copy } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
 interface SystemPromptSectionProps {
   title: string;
   content: string;
-  isEditing: boolean;
   setContent: (content: string) => void;
   handleSave: () => void;
-  setIsEditing: (isEditing: boolean) => void;
 }
 
 export const SystemPromptSection = ({
   title,
   content,
-  isEditing,
   setContent,
   handleSave,
-  setIsEditing,
 }: SystemPromptSectionProps) => {
   const { toast } = useToast();
 
@@ -73,20 +69,11 @@ export const SystemPromptSection = ({
           </Button>
           <Button
             variant="outline"
-            onClick={() => isEditing ? handleSave() : setIsEditing(true)}
+            onClick={handleSave}
             className="bg-[#f3f3f3] hover:bg-[#e5e5e5]"
           >
-            {isEditing ? (
-              <>
-                <Save className="w-4 h-4 mr-2" />
-                Save
-              </>
-            ) : (
-              <>
-                <Edit className="w-4 h-4 mr-2" />
-                Edit
-              </>
-            )}
+            <Save className="w-4 h-4 mr-2" />
+            Save
           </Button>
         </div>
       </div>
@@ -94,7 +81,6 @@ export const SystemPromptSection = ({
         value={content}
         onChange={(e) => setContent(e.target.value)}
         className="min-h-[200px]"
-        disabled={!isEditing}
       />
     </div>
   );

@@ -8,8 +8,6 @@ import { SystemPromptSection } from "@/components/system-prompts/SystemPromptSec
 const SystemPrompts = () => {
   const { toast } = useToast();
   const queryClient = useQueryClient();
-  const [isEditingWatch, setIsEditingWatch] = useState(false);
-  const [isEditingReference, setIsEditingReference] = useState(false);
   const [watchPrompt, setWatchPrompt] = useState("");
   const [referencePrompt, setReferencePrompt] = useState("");
 
@@ -26,8 +24,8 @@ const SystemPrompts = () => {
       if (data) {
         const watchPromptData = data.find(prompt => prompt.id === 2);
         const referencePromptData = data.find(prompt => prompt.id === 5);
-        setWatchPrompt(watchPromptData?.content || "");
-        setReferencePrompt(referencePromptData?.content || "");
+        if (!watchPrompt) setWatchPrompt(watchPromptData?.content || "");
+        if (!referencePrompt) setReferencePrompt(referencePromptData?.content || "");
       }
       return data;
     },
@@ -43,7 +41,6 @@ const SystemPrompts = () => {
       if (error) throw error;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["systemPrompts"] });
       toast({
         title: "Success",
         description: "System prompt updated successfully",
@@ -61,12 +58,10 @@ const SystemPrompts = () => {
 
   const handleWatchPromptSave = () => {
     updatePromptMutation.mutate({ id: 2, content: watchPrompt });
-    setIsEditingWatch(false);
   };
 
   const handleReferencePromptSave = () => {
     updatePromptMutation.mutate({ id: 5, content: referencePrompt });
-    setIsEditingReference(false);
   };
 
   return (
@@ -79,19 +74,15 @@ const SystemPrompts = () => {
           <SystemPromptSection
             title="Watch Description System Prompt"
             content={watchPrompt}
-            isEditing={isEditingWatch}
             setContent={setWatchPrompt}
             handleSave={handleWatchPromptSave}
-            setIsEditing={setIsEditingWatch}
           />
 
           <SystemPromptSection
             title="Reference Description System Prompt"
             content={referencePrompt}
-            isEditing={isEditingReference}
             setContent={setReferencePrompt}
             handleSave={handleReferencePromptSave}
-            setIsEditing={setIsEditingReference}
           />
         </div>
       </div>

@@ -8,8 +8,6 @@ import { StyleGuideSection } from "@/components/style-guides/StyleGuideSection";
 const StyleGuides = () => {
   const { toast } = useToast();
   const queryClient = useQueryClient();
-  const [isEditingWatch, setIsEditingWatch] = useState(false);
-  const [isEditingReference, setIsEditingReference] = useState(false);
   const [watchGuide, setWatchGuide] = useState("");
   const [referenceGuide, setReferenceGuide] = useState("");
 
@@ -26,8 +24,8 @@ const StyleGuides = () => {
       if (data) {
         const watchGuideData = data.find(guide => guide.id === 1);
         const referenceGuideData = data.find(guide => guide.id === 4);
-        setWatchGuide(watchGuideData?.content || "");
-        setReferenceGuide(referenceGuideData?.content || "");
+        if (!watchGuide) setWatchGuide(watchGuideData?.content || "");
+        if (!referenceGuide) setReferenceGuide(referenceGuideData?.content || "");
       }
       return data;
     },
@@ -43,7 +41,6 @@ const StyleGuides = () => {
       if (error) throw error;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["styleGuides"] });
       toast({
         title: "Success",
         description: "Style guide updated successfully",
@@ -61,12 +58,10 @@ const StyleGuides = () => {
 
   const handleWatchGuideSave = () => {
     updateGuideMutation.mutate({ id: 1, content: watchGuide });
-    setIsEditingWatch(false);
   };
 
   const handleReferenceGuideSave = () => {
     updateGuideMutation.mutate({ id: 4, content: referenceGuide });
-    setIsEditingReference(false);
   };
 
   return (
@@ -79,19 +74,15 @@ const StyleGuides = () => {
           <StyleGuideSection
             title="Watch Description Style Guide"
             content={watchGuide}
-            isEditing={isEditingWatch}
             setContent={setWatchGuide}
             handleSave={handleWatchGuideSave}
-            setIsEditing={setIsEditingWatch}
           />
 
           <StyleGuideSection
             title="Reference Description Style Guide"
             content={referenceGuide}
-            isEditing={isEditingReference}
             setContent={setReferenceGuide}
             handleSave={handleReferenceGuideSave}
-            setIsEditing={setIsEditingReference}
           />
         </div>
       </div>
