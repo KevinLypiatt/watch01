@@ -38,9 +38,12 @@ const EditWatch = () => {
     mutationFn: async (updatedWatch: any) => {
       if (!watchId) throw new Error("Watch ID is required");
       
+      // Remove the id field from the update data
+      const { id: _, ...updateData } = updatedWatch;
+      
       const { error } = await supabase
         .from("watches")
-        .update(updatedWatch)
+        .update(updateData)
         .eq("id", watchId);
 
       if (error) throw error;
