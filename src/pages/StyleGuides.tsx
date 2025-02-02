@@ -17,13 +17,13 @@ const StyleGuides = () => {
       const { data, error } = await supabase
         .from("style_guides")
         .select("*")
-        .in("id", [1, 4]);
+        .in("id", [1, 8]);  // Changed from [1, 4] to [1, 8]
       
       if (error) throw error;
       
       if (data) {
         const watchGuideData = data.find(guide => guide.id === 1);
-        const referenceGuideData = data.find(guide => guide.id === 4);
+        const referenceGuideData = data.find(guide => guide.id === 8);  // Changed from 4 to 8
         if (!watchGuide) setWatchGuide(watchGuideData?.content || "");
         if (!referenceGuide) setReferenceGuide(referenceGuideData?.content || "");
       }
@@ -61,7 +61,7 @@ const StyleGuides = () => {
   };
 
   const handleReferenceGuideSave = () => {
-    updateGuideMutation.mutate({ id: 4, content: referenceGuide });
+    updateGuideMutation.mutate({ id: 8, content: referenceGuide });  // Changed from 4 to 8
   };
 
   return (
