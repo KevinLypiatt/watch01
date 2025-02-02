@@ -27,19 +27,15 @@ const WatchList = () => {
         query = query.ilike("brand", `%${brandFilter}%`);
       }
       if (modelFilter) {
-        query = query.ilike("model_reference", `%${modelFilter}%`);
+        query = query.ilike("model_name", `%${modelFilter}%`);
       }
       if (searchTerm) {
         query = query.or(
           `brand.ilike.%${searchTerm}%,model_name.ilike.%${searchTerm}%,model_reference.ilike.%${searchTerm}%`
         );
       }
-
-      query = query.order('brand', { ascending: true }).order('model_reference', { ascending: true });
       
-      if (sortColumn) {
-        query = query.order(sortColumn, { ascending: sortDirection === 'asc' });
-      }
+      query = query.order(sortColumn, { ascending: sortDirection === 'asc' });
 
       const { data, error } = await query;
       if (error) throw error;
@@ -90,7 +86,7 @@ const WatchList = () => {
   if (isLoading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
-        <p>Loading watches...</p>
+        Loading...
       </div>
     );
   }
@@ -100,7 +96,7 @@ const WatchList = () => {
       <PageHeader />
       <div className="container mx-auto py-20">
         <WatchListHeader />
-        
+
         <WatchListFilters
           brandInput={brandInput}
           modelInput={modelInput}

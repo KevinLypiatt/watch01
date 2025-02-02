@@ -17,12 +17,15 @@ import { useState } from "react";
 interface Watch {
   id: number;
   brand: string;
-  model_reference: string;
   model_name: string;
+  model_reference: string;
   case_material: string;
   year: number;
   movement_type: string;
+  listing_reference: string;
   condition: string;
+  description: string;
+  additional_information: string;
 }
 
 interface WatchListTableProps {
@@ -58,55 +61,45 @@ export const WatchListTable = ({
       <div className="rounded-md border">
         <Table>
           <TableHeader>
-          <TableRow>
-            <TableHead onClick={() => handleSort('brand')} className="cursor-pointer hover:bg-muted/50">
-              Brand
-              <ArrowUpDown className="ml-2 h-4 w-4 inline" />
-            </TableHead>
-            <TableHead onClick={() => handleSort('model_reference')} className="cursor-pointer hover:bg-muted/50">
-              Model Reference
-              <ArrowUpDown className="ml-2 h-4 w-4 inline" />
-            </TableHead>
-            <TableHead onClick={() => handleSort('model_name')} className="cursor-pointer hover:bg-muted/50">
-              Model Name
-              <ArrowUpDown className="ml-2 h-4 w-4 inline" />
-            </TableHead>
-            <TableHead onClick={() => handleSort('case_material')} className="cursor-pointer hover:bg-muted/50">
-              Case Material
-              <ArrowUpDown className="ml-2 h-4 w-4 inline" />
-            </TableHead>
-            <TableHead onClick={() => handleSort('year')} className="cursor-pointer hover:bg-muted/50">
-              Year
-              <ArrowUpDown className="ml-2 h-4 w-4 inline" />
-            </TableHead>
-            <TableHead onClick={() => handleSort('movement_type')} className="cursor-pointer hover:bg-muted/50">
-              Movement Type
-              <ArrowUpDown className="ml-2 h-4 w-4 inline" />
-            </TableHead>
-            <TableHead onClick={() => handleSort('condition')} className="cursor-pointer hover:bg-muted/50">
-              Condition
-              <ArrowUpDown className="ml-2 h-4 w-4 inline" />
-            </TableHead>
-            <TableHead className="w-[50px]">Actions</TableHead>
-          </TableRow>
+            <TableRow>
+              <TableHead onClick={() => handleSort('brand')} className="cursor-pointer hover:bg-muted/50">
+                Brand
+                <ArrowUpDown className="ml-2 h-4 w-4 inline" />
+              </TableHead>
+              <TableHead onClick={() => handleSort('model_name')} className="cursor-pointer hover:bg-muted/50">
+                Model Name
+                <ArrowUpDown className="ml-2 h-4 w-4 inline" />
+              </TableHead>
+              <TableHead onClick={() => handleSort('model_reference')} className="cursor-pointer hover:bg-muted/50">
+                Reference
+                <ArrowUpDown className="ml-2 h-4 w-4 inline" />
+              </TableHead>
+              <TableHead onClick={() => handleSort('case_material')} className="cursor-pointer hover:bg-muted/50">
+                Case Material
+                <ArrowUpDown className="ml-2 h-4 w-4 inline" />
+              </TableHead>
+              <TableHead onClick={() => handleSort('year')} className="cursor-pointer hover:bg-muted/50">
+                Year
+                <ArrowUpDown className="ml-2 h-4 w-4 inline" />
+              </TableHead>
+              <TableHead className="w-[100px]">Actions</TableHead>
+            </TableRow>
           </TableHeader>
           <TableBody>
             {watches && watches.length > 0 ? (
               watches.map((watch) => (
                 <TableRow key={watch.id}>
                   <TableCell>{watch.brand || "-"}</TableCell>
-                  <TableCell>{watch.model_reference || "-"}</TableCell>
                   <TableCell>{watch.model_name || "-"}</TableCell>
+                  <TableCell>{watch.model_reference || "-"}</TableCell>
                   <TableCell>{watch.case_material || "-"}</TableCell>
                   <TableCell>{watch.year || "-"}</TableCell>
-                  <TableCell>{watch.movement_type || "-"}</TableCell>
-                  <TableCell>{watch.condition || "-"}</TableCell>
                   <TableCell>
                     <div className="flex gap-2">
                       <Button
                         variant="ghost"
                         size="icon"
-                        onClick={() => navigate(`/watches/${watch.id}/edit`)}
+                        onClick={() => navigate(`/watches/${watch.id}`)}
                       >
                         <Edit className="h-4 w-4" />
                       </Button>
@@ -123,7 +116,7 @@ export const WatchListTable = ({
               ))
             ) : (
               <TableRow>
-                <TableCell colSpan={8} className="text-center py-4">
+                <TableCell colSpan={6} className="text-center py-4">
                   No watches found
                 </TableCell>
               </TableRow>
