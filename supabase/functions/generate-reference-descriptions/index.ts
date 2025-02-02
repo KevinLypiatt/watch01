@@ -22,21 +22,33 @@ serve(async (req) => {
 
     const { referenceId, generateAll, brand, reference_name } = await req.json();
     
-    // Get the system prompt
+    // Get both the system prompt and style guide
     const { data: styleGuides } = await supabaseClient
       .from('style_guides')
-      .select('content')
-      .eq('name', 'reference_description_system_prompt')
-      .single();
+      .select('content, name')
+      .in('name', ['reference_description_system_prompt', 'reference_description_style_guide']);
 
-    const systemPrompt = styleGuides?.content || '';
+    if (!styleGuides || styleGuides.length < 2) {
+      throw new Error('Required prompts not found in the database');
+    }
+
+    const systemPrompt = styleGuides.find(guide => guide.name === 'reference_description_system_prompt')?.content || '';
+    const styleGuide = styleGuides.find(guide => guide.name === 'reference_description_style_guide')?.content || '';
+    
     console.log('System prompt loaded:', systemPrompt);
+    console.log('Style guide loaded:', styleGuide);
 
     // Function to generate description for a single reference
     async function generateDescription(reference: any) {
       console.log('Generating description for reference:', reference);
 
-      const prompt = `${systemPrompt}\n\nBrand: ${reference.brand}\nReference Name: ${reference.reference_name}`;
+      const prompt = `${systemPrompt}
+
+Style Guide:
+${styleGuide}
+
+Brand: ${reference.brand}
+Reference Name: ${reference.reference_name}`;
       
       console.log('Sending prompt to Claude:', prompt);
 
