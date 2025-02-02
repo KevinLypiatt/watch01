@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useQuery, useMutation } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -9,6 +9,7 @@ import { Link } from "react-router-dom";
 
 const SystemPrompts = () => {
   const { toast } = useToast();
+  const queryClient = useQueryClient();
   const [isEditingWatch, setIsEditingWatch] = useState(false);
   const [isEditingReference, setIsEditingReference] = useState(false);
   const [watchPrompt, setWatchPrompt] = useState("");
@@ -38,12 +39,13 @@ const SystemPrompts = () => {
     mutationFn: async ({ id, content }: { id: number; content: string }) => {
       const { error } = await supabase
         .from("style_guides")
-        .update({ content })
+        .update({ content, updated_at: new Date().toISOString() })
         .eq("id", id);
       
       if (error) throw error;
     },
     onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["systemPrompts"] });
       toast({
         title: "Success",
         description: "System prompt updated successfully",
