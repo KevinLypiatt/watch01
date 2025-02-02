@@ -1,5 +1,5 @@
 import { Button } from "@/components/ui/button";
-import { Plus } from "lucide-react";
+import { Plus, Home } from "lucide-react";
 import { Link } from "react-router-dom";
 
 interface ReferenceDescriptionHeaderProps {

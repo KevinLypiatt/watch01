@@ -18,10 +18,6 @@ const ReferenceDescriptions = () => {
   const [referenceFilter, setReferenceFilter] = useState("");
   const [sortColumn, setSortColumn] = useState<string>("brand");
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
-  const [isEditingPrompt, setIsEditingPrompt] = useState(false);
-  const [isEditingGuide, setIsEditingGuide] = useState(false);
-  const [systemPrompt, setSystemPrompt] = useState("");
-  const [styleGuide, setStyleGuide] = useState("");
 
   const generateMutation = useGenerateDescriptions();
 
@@ -50,83 +46,6 @@ const ReferenceDescriptions = () => {
     },
   });
 
-  const { data: styleGuides } = useQuery({
-    queryKey: ["styleGuides"],
-    queryFn: async () => {
-      const { data: systemPromptData, error: systemPromptError } = await supabase
-        .from("style_guides")
-        .select("content")
-        .eq("id", 5)
-        .maybeSingle();
-
-      const { data: styleGuideData, error: styleGuideError } = await supabase
-        .from("style_guides")
-        .select("content")
-        .eq("id", 4)
-        .maybeSingle();
-      
-      if (systemPromptError || styleGuideError) {
-        console.error("Error fetching guides:", { systemPromptError, styleGuideError });
-        return [];
-      }
-      
-      if (systemPromptData) setSystemPrompt(systemPromptData.content);
-      if (styleGuideData) setStyleGuide(styleGuideData.content);
-      
-      return [systemPromptData, styleGuideData].filter(Boolean);
-    },
-  });
-
-  const updateSystemPromptMutation = useMutation({
-    mutationFn: async () => {
-      const { error } = await supabase
-        .from("style_guides")
-        .update({ content: systemPrompt })
-        .eq("id", 5);
-      if (error) throw error;
-    },
-    onSuccess: () => {
-      toast({
-        title: "Success",
-        description: "System prompt updated successfully",
-      });
-      setIsEditingPrompt(false);
-    },
-    onError: (error) => {
-      toast({
-        title: "Error",
-        description: "Failed to update system prompt",
-        variant: "destructive",
-      });
-      console.error("Error updating system prompt:", error);
-    },
-  });
-
-  const updateStyleGuideMutation = useMutation({
-    mutationFn: async () => {
-      const { error } = await supabase
-        .from("style_guides")
-        .update({ content: styleGuide })
-        .eq("id", 4);
-      if (error) throw error;
-    },
-    onSuccess: () => {
-      toast({
-        title: "Success",
-        description: "Style guide updated successfully",
-      });
-      setIsEditingGuide(false);
-    },
-    onError: (error) => {
-      toast({
-        title: "Error",
-        description: "Failed to update style guide",
-        variant: "destructive",
-      });
-      console.error("Error updating style guide:", error);
-    },
-  });
-
   const handleSort = (column: string) => {
     if (sortColumn === column) {
       setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
@@ -146,14 +65,6 @@ const ReferenceDescriptions = () => {
     generateMutation.mutate();
   };
 
-  const handleSystemPromptSave = () => {
-    updateSystemPromptMutation.mutate();
-  };
-
-  const handleStyleGuideSave = () => {
-    updateStyleGuideMutation.mutate();
-  };
-
   if (isLoading) {
     return <div className="flex items-center justify-center min-h-screen">Loading...</div>;
   }
@@ -164,16 +75,6 @@ const ReferenceDescriptions = () => {
       <div className="container mx-auto py-20">
         <ReferenceDescriptionHeader
           isGenerating={generateMutation.isPending}
-          isEditingPrompt={isEditingPrompt}
-          isEditingGuide={isEditingGuide}
-          systemPrompt={systemPrompt}
-          styleGuide={styleGuide}
-          setIsEditingPrompt={setIsEditingPrompt}
-          setIsEditingGuide={setIsEditingGuide}
-          setSystemPrompt={setSystemPrompt}
-          setStyleGuide={setStyleGuide}
-          handleSystemPromptSave={handleSystemPromptSave}
-          handleStyleGuideSave={handleStyleGuideSave}
           handleGenerateAll={handleGenerateAll}
         />
 
