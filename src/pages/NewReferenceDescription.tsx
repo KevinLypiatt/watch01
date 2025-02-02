@@ -17,6 +17,18 @@ const NewReferenceDescription = () => {
 
   const createMutation = useMutation({
     mutationFn: async () => {
+      // First check if a record with the same brand and reference name exists
+      const { data: existingReference } = await supabase
+        .from("reference_descriptions")
+        .select("reference_id")
+        .eq("brand", brand)
+        .eq("reference_name", referenceName)
+        .single();
+
+      if (existingReference) {
+        throw new Error("A reference with this brand and reference name already exists");
+      }
+
       const { error } = await supabase
         .from("reference_descriptions")
         .insert([
@@ -35,10 +47,10 @@ const NewReferenceDescription = () => {
       });
       navigate("/reference-descriptions");
     },
-    onError: (error) => {
+    onError: (error: Error) => {
       toast({
         title: "Error",
-        description: "Failed to create reference description",
+        description: error.message || "Failed to create reference description",
         variant: "destructive",
       });
       console.error("Error creating reference description:", error);
