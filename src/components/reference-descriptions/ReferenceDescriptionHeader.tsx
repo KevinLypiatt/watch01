@@ -1,6 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { Plus } from "lucide-react";
-import { useNavigate } from "react-router-dom";
+import { Link } from "react-router-dom";
 
 interface ReferenceDescriptionHeaderProps {
   isGenerating: boolean;
@@ -11,25 +11,27 @@ export const ReferenceDescriptionHeader = ({
   isGenerating,
   handleGenerateAll,
 }: ReferenceDescriptionHeaderProps) => {
-  const navigate = useNavigate();
-
   return (
-    <div className="flex flex-col gap-4 mb-6">
-      <div className="flex justify-between items-center">
+    <div className="flex justify-between items-center mb-6">
+      <div>
         <h1 className="text-2xl font-bold">Reference Descriptions</h1>
+        <p className="text-muted-foreground">
+          Manage and generate reference descriptions
+        </p>
       </div>
-      <div className="flex justify-end gap-4">
+      <div className="flex gap-4">
+        <Link to="/reference-descriptions/new">
+          <Button>
+            <Plus className="w-4 h-4 mr-2" />
+            Add New Reference
+          </Button>
+        </Link>
         <Button
           variant="outline"
-          className="bg-[#f3f3f3] hover:bg-[#e5e5e5]"
           onClick={handleGenerateAll}
           disabled={isGenerating}
         >
-          {isGenerating ? "Working..." : "Generate Reference Descriptions"}
-        </Button>
-        <Button onClick={() => navigate("/reference-descriptions/new")}>
-          <Plus className="mr-2 h-4 w-4" />
-          Add New Description
+          {isGenerating ? "Generating..." : "Generate All Descriptions"}
         </Button>
       </div>
     </div>

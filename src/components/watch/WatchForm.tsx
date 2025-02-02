@@ -8,7 +8,6 @@ interface WatchFormProps {
   formData: any;
   handleInputChange: (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => void;
   handleGenerateDescription: () => void;
-  handleStyleGuideEdit: (name: string) => void;
   isGenerating: boolean;
   handleSubmit: (e: React.FormEvent) => void;
 }
@@ -17,7 +16,6 @@ export const WatchForm = ({
   formData,
   handleInputChange,
   handleGenerateDescription,
-  handleStyleGuideEdit,
   isGenerating,
   handleSubmit
 }: WatchFormProps) => {
@@ -66,22 +64,6 @@ export const WatchForm = ({
         />
       </div>
       <div className="flex gap-4 mb-4">
-        <Button
-          type="button"
-          onClick={() => handleStyleGuideEdit('watch_description_system_prompt')}
-          variant="outline"
-          className="bg-[#f3f3f3] hover:bg-[#e5e5e5]"
-        >
-          Edit System Prompt
-        </Button>
-        <Button
-          type="button"
-          onClick={() => handleStyleGuideEdit('watch_description_guide')}
-          variant="outline"
-          className="bg-[#f3f3f3] hover:bg-[#e5e5e5]"
-        >
-          Edit Style Guide
-        </Button>
         <Button
           type="button"
           onClick={handleGenerateDescription}
