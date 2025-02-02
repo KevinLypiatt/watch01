@@ -33,32 +33,41 @@ export const WatchForm = ({
       return;
     }
 
-    const { data: reference } = await supabase
-      .from('reference_descriptions')
-      .select('reference_description')
-      .eq('brand', formData.brand)
-      .eq('reference_name', formData.model_reference)
-      .single();
+    try {
+      const { data: reference } = await supabase
+        .from('reference_descriptions')
+        .select('reference_description')
+        .eq('brand', formData.brand)
+        .eq('reference_name', formData.model_reference)
+        .maybeSingle();
 
-    if (!reference) {
+      if (!reference) {
+        toast({
+          title: "Warning",
+          description: "No reference record for this watch",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      if (!reference.reference_description) {
+        toast({
+          title: "Warning",
+          description: "No reference description yet created",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      handleGenerateDescription();
+    } catch (error) {
+      console.error('Error checking reference:', error);
       toast({
-        title: "Warning",
-        description: "No reference record for this watch",
+        title: "Error",
+        description: "Failed to check reference description",
         variant: "destructive",
       });
-      return;
     }
-
-    if (!reference.reference_description) {
-      toast({
-        title: "Warning",
-        description: "No reference description yet created",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    handleGenerateDescription();
   };
 
   return (
@@ -66,41 +75,75 @@ export const WatchForm = ({
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div>
           <label className="block text-sm font-medium mb-2">Brand</label>
-          <Input name="brand" onChange={handleInputChange} />
+          <Input 
+            name="brand" 
+            value={formData.brand || ''} 
+            onChange={handleInputChange} 
+          />
         </div>
         <div>
           <label className="block text-sm font-medium mb-2">Model Reference</label>
-          <Input name="model_reference" onChange={handleInputChange} />
+          <Input 
+            name="model_reference" 
+            value={formData.model_reference || ''} 
+            onChange={handleInputChange} 
+          />
         </div>
         <div>
           <label className="block text-sm font-medium mb-2">Model Name</label>
-          <Input name="model_name" onChange={handleInputChange} />
+          <Input 
+            name="model_name" 
+            value={formData.model_name || ''} 
+            onChange={handleInputChange} 
+          />
         </div>
         <div>
           <label className="block text-sm font-medium mb-2">Case Material</label>
-          <Input name="case_material" onChange={handleInputChange} />
+          <Input 
+            name="case_material" 
+            value={formData.case_material || ''} 
+            onChange={handleInputChange} 
+          />
         </div>
         <div>
           <label className="block text-sm font-medium mb-2">Year</label>
-          <Input name="year" type="number" onChange={handleInputChange} />
+          <Input 
+            name="year" 
+            type="number" 
+            value={formData.year || ''} 
+            onChange={handleInputChange} 
+          />
         </div>
         <div>
           <label className="block text-sm font-medium mb-2">Movement Type</label>
-          <Input name="movement_type" onChange={handleInputChange} />
+          <Input 
+            name="movement_type" 
+            value={formData.movement_type || ''} 
+            onChange={handleInputChange} 
+          />
         </div>
         <div>
           <label className="block text-sm font-medium mb-2">Listing Reference</label>
-          <Input name="listing_reference" onChange={handleInputChange} />
+          <Input 
+            name="listing_reference" 
+            value={formData.listing_reference || ''} 
+            onChange={handleInputChange} 
+          />
         </div>
         <div>
           <label className="block text-sm font-medium mb-2">Condition</label>
-          <Input name="condition" onChange={handleInputChange} />
+          <Input 
+            name="condition" 
+            value={formData.condition || ''} 
+            onChange={handleInputChange} 
+          />
         </div>
       </div>
       <div>
         <label className="block text-sm font-medium mb-2">Additional Information</label>
         <Textarea
           name="additional_information"
+          value={formData.additional_information || ''}
           onChange={handleInputChange}
           className="min-h-[100px]"
         />
