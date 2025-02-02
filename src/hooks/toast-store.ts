@@ -1,4 +1,6 @@
 import { ToasterToast } from "./toast-types";
+import { Dispatch } from "react";
+import { Action } from "./toast-types";
 
 let count = 0;
 
@@ -12,7 +14,7 @@ export const TOAST_REMOVE_DELAY = 3000;
 
 export const toastTimeouts = new Map<string, ReturnType<typeof setTimeout>>();
 
-export const addToRemoveQueue = (toastId: string, dispatch: (action: any) => void) => {
+export const addToRemoveQueue = (toastId: string, dispatch: Dispatch<Action>) => {
   if (toastTimeouts.has(toastId)) {
     return;
   }
@@ -28,7 +30,10 @@ export const addToRemoveQueue = (toastId: string, dispatch: (action: any) => voi
   toastTimeouts.set(toastId, timeout);
 };
 
-export const createToast = (props: Omit<ToasterToast, "id">) => {
+export const createToast = (
+  props: Omit<ToasterToast, "id">,
+  dispatch: Dispatch<Action>
+) => {
   const id = genId();
 
   return {

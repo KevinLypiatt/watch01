@@ -1,8 +1,9 @@
 import { Action, State } from "./toast-types";
 import { TOAST_LIMIT } from "./toast-store";
 import { addToRemoveQueue } from "./toast-store";
+import { Dispatch } from "react";
 
-export const reducer = (state: State, action: Action): State => {
+export const reducer = (state: State, action: Action, dispatch: Dispatch<Action>): State => {
   switch (action.type) {
     case "ADD_TOAST":
       return {
