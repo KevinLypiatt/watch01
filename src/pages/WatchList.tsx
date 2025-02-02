@@ -5,8 +5,10 @@ import { PageHeader } from "@/components/PageHeader";
 import { WatchListHeader } from "@/components/watch-list/WatchListHeader";
 import { WatchListFilters } from "@/components/watch-list/WatchListFilters";
 import { WatchListTable } from "@/components/watch-list/WatchListTable";
+import { useToast } from "@/hooks/use-toast";
 
 const WatchList = () => {
+  const { toast } = useToast();
   const [searchInput, setSearchInput] = useState("");
   const [brandInput, setBrandInput] = useState("");
   const [modelInput, setModelInput] = useState("");
@@ -16,7 +18,7 @@ const WatchList = () => {
   const [sortColumn, setSortColumn] = useState<string>("brand");
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
 
-  const { data: watches, isLoading } = useQuery({
+  const { data: watches, isLoading, refetch } = useQuery({
     queryKey: ["watches", searchTerm, brandFilter, modelFilter, sortColumn, sortDirection],
     queryFn: async () => {
       let query = supabase.from("watches").select("*");
@@ -60,6 +62,31 @@ const WatchList = () => {
     setModelFilter(modelInput);
   };
 
+  const handleDelete = async (id: number) => {
+    try {
+      const { error } = await supabase
+        .from('watches')
+        .delete()
+        .eq('id', id);
+      
+      if (error) throw error;
+      
+      toast({
+        title: "Watch deleted",
+        description: "The watch has been successfully deleted.",
+      });
+      
+      refetch();
+    } catch (error) {
+      console.error('Error deleting watch:', error);
+      toast({
+        title: "Error",
+        description: "Failed to delete the watch. Please try again.",
+        variant: "destructive",
+      });
+    }
+  };
+
   if (isLoading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
@@ -87,6 +114,7 @@ const WatchList = () => {
         <WatchListTable
           watches={watches || []}
           handleSort={handleSort}
+          handleDelete={handleDelete}
         />
       </div>
     </div>

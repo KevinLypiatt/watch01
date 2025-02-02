@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useQuery, useMutation } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { PageHeader } from "@/components/PageHeader";
 import { ReferenceDescriptionHeader } from "@/components/reference-descriptions/ReferenceDescriptionHeader";
@@ -21,7 +21,7 @@ const ReferenceDescriptions = () => {
 
   const generateMutation = useGenerateDescriptions();
 
-  const { data: references, isLoading } = useQuery({
+  const { data: references, isLoading, refetch } = useQuery({
     queryKey: ["references", brandFilter, referenceFilter, searchTerm, sortColumn, sortDirection],
     queryFn: async () => {
       let query = supabase.from("reference_descriptions").select("*");
@@ -61,6 +61,31 @@ const ReferenceDescriptions = () => {
     setReferenceFilter(referenceInput);
   };
 
+  const handleDelete = async (id: number) => {
+    try {
+      const { error } = await supabase
+        .from('reference_descriptions')
+        .delete()
+        .eq('reference_id', id);
+      
+      if (error) throw error;
+      
+      toast({
+        title: "Reference deleted",
+        description: "The reference has been successfully deleted.",
+      });
+      
+      refetch();
+    } catch (error) {
+      console.error('Error deleting reference:', error);
+      toast({
+        title: "Error",
+        description: "Failed to delete the reference. Please try again.",
+        variant: "destructive",
+      });
+    }
+  };
+
   const handleGenerateAll = () => {
     generateMutation.mutate();
   };
@@ -91,6 +116,7 @@ const ReferenceDescriptions = () => {
         <ReferenceDescriptionTable
           references={references || []}
           handleSort={handleSort}
+          handleDelete={handleDelete}
         />
       </div>
     </div>
