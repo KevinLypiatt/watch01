@@ -137,16 +137,6 @@ const EditReferenceDescription = () => {
           <h1 className="text-2xl font-bold">
             {isNewReference ? "New Reference Description" : "Edit Reference Description"}
           </h1>
-          {!isNewReference && (
-            <Button
-              variant="outline"
-              className="bg-[#f3f3f3] hover:bg-[#e5e5e5]"
-              onClick={handleGenerate}
-              disabled={isGenerating}
-            >
-              {isGenerating ? "Working..." : "Generate Reference Description"}
-            </Button>
-          )}
         </div>
         <form onSubmit={handleSubmit} className="space-y-6">
           <div>
@@ -173,9 +163,21 @@ const EditReferenceDescription = () => {
               className="w-full min-h-[200px]"
             />
           </div>
-          <Button type="submit">
-            {isNewReference ? "Create Reference" : "Save Changes"}
-          </Button>
+          <div className="flex gap-4">
+            <Button type="submit" variant="outline" className="bg-[#f3f3f3] hover:bg-[#e5e5e5]">
+              Save Changes
+            </Button>
+            {!isNewReference && (
+              <Button
+                variant="outline"
+                className="bg-[#f3f3f3] hover:bg-[#e5e5e5]"
+                onClick={handleGenerate}
+                disabled={isGenerating}
+              >
+                {isGenerating ? "Working..." : "Generate Reference Description"}
+              </Button>
+            )}
+          </div>
         </form>
       </div>
     </div>

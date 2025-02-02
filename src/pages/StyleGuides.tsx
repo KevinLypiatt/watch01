@@ -61,15 +61,15 @@ const StyleGuides = () => {
     },
   });
 
-  const handleWatchGuideSave = () => {
-    updateGuideMutation.mutate({ id: 1, content: watchGuide });
-    setIsEditingWatch(false);
-  };
+const handleWatchGuideSave = () => {
+  updateGuideMutation.mutate({ id: 1, content: watchGuide });
+  setIsEditingWatch(false);
+};
 
-  const handleReferenceGuideSave = () => {
-    updateGuideMutation.mutate({ id: 4, content: referenceGuide });
-    setIsEditingReference(false);
-  };
+const handleReferenceGuideSave = () => {
+  updateGuideMutation.mutate({ id: 4, content: referenceGuide });
+  setIsEditingReference(false);
+};
 
   const handleDownload = (content: string, filename: string) => {
     const blob = new Blob([content], { type: 'text/plain' });

@@ -61,7 +61,7 @@ const NewReferenceDescription = () => {
       setDescription(data.description);
       toast({
         title: "Success",
-        description: "Description generated successfully",
+        description: "Generation finished...",
       });
       setIsGenerating(false);
     },
