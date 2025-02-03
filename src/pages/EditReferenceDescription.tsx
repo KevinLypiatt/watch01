@@ -16,14 +16,26 @@ const EditReferenceDescription = () => {
   const [referenceName, setReferenceName] = useState("");
   const [description, setDescription] = useState("");
 
+  // Validate ID is a valid number
+  const numericId = id ? parseInt(id) : null;
+  if (!numericId || isNaN(numericId)) {
+    toast({
+      title: "Error",
+      description: "Invalid reference ID",
+      variant: "destructive",
+    });
+    navigate("/reference-descriptions");
+    return null;
+  }
+
   // Fetch existing reference data
   const { data: reference } = useQuery({
-    queryKey: ['reference', id],
+    queryKey: ['reference', numericId],
     queryFn: async () => {
       const { data, error } = await supabase
         .from('reference_descriptions')
         .select('*')
-        .eq('reference_id', parseInt(id as string))
+        .eq('reference_id', numericId)
         .single();
       
       if (error) throw error;
@@ -46,7 +58,7 @@ const EditReferenceDescription = () => {
           reference_name: referenceName,
           reference_description: description,
         })
-        .eq('reference_id', parseInt(id as string));
+        .eq('reference_id', numericId);
 
       if (error) throw error;
     },
@@ -70,7 +82,7 @@ const EditReferenceDescription = () => {
     mutationFn: async () => {
       const { data, error } = await supabase.functions.invoke('generate-reference-descriptions', {
         body: { 
-          referenceId: parseInt(id as string),
+          referenceId: numericId,
           brand,
           reference_name: referenceName
         }
