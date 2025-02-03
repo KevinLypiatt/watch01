@@ -30,7 +30,7 @@ export const WatchListFilters = ({
           onKeyDown={(e) => e.key === "Enter" && handleSearch()}
         />
         <Input
-          placeholder="Filter by model..."
+          placeholder="Filter by reference..."
           value={modelInput}
           onChange={(e) => setModelInput(e.target.value)}
           onKeyDown={(e) => e.key === "Enter" && handleSearch()}

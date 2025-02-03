@@ -44,7 +44,6 @@ export const WatchListTable = ({
       const row = document.getElementById(`watch-${lastEditedId}`);
       if (row) {
         row.scrollIntoView({ behavior: 'smooth', block: 'center' });
-        // Highlight the row briefly
         row.classList.add('bg-muted/50');
         setTimeout(() => {
           row.classList.remove('bg-muted/50');
@@ -100,9 +99,9 @@ export const WatchListTable = ({
                   id={`watch-${watch.id}`}
                   className="transition-colors duration-200"
                 >
-                  <TableCell>{watch.brand || "-"}</TableCell>
-                  <TableCell>{watch.model_name || "-"}</TableCell>
-                  <TableCell>{watch.model_reference || "-"}</TableCell>
+                  <TableCell className="align-top">{watch.brand || "-"}</TableCell>
+                  <TableCell className="align-top">{watch.model_name || "-"}</TableCell>
+                  <TableCell className="align-top">{watch.model_reference || "-"}</TableCell>
                   <TableCell>{watch.description || "-"}</TableCell>
                   <TableCell>
                     <div className="flex gap-2">
