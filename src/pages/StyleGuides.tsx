@@ -5,6 +5,16 @@ import { useToast } from "@/hooks/use-toast";
 import { StyleGuideHeader } from "@/components/style-guides/StyleGuideHeader";
 import { StyleGuideSection } from "@/components/style-guides/StyleGuideSection";
 
+interface AIPrompt {
+  id: number;
+  name: string;
+  content: string;
+  purpose: string;
+  ai_model: string;
+  created_at: string;
+  updated_at: string;
+}
+
 const StyleGuides = () => {
   const { toast } = useToast();
   const [watchGuide, setWatchGuide] = useState("");
@@ -14,9 +24,9 @@ const StyleGuides = () => {
     queryKey: ["styleGuides"],
     queryFn: async () => {
       const { data, error } = await supabase
-        .from("style_guides")
+        .from("ai_prompts")
         .select("*")
-        .in("id", [1, 8]);
+        .in("name", ["Watch Style Guide", "Reference Style Guide"]);
       
       if (error) {
         console.error("Error fetching style guides:", error);
@@ -24,19 +34,19 @@ const StyleGuides = () => {
       }
       
       if (data) {
-        const watchGuideData = data.find(guide => guide.id === 1);
-        const referenceGuideData = data.find(guide => guide.id === 8);
+        const watchGuideData = data.find(guide => guide.name === "Watch Style Guide");
+        const referenceGuideData = data.find(guide => guide.name === "Reference Style Guide");
         if (!watchGuide) setWatchGuide(watchGuideData?.content || "");
         if (!referenceGuide) setReferenceGuide(referenceGuideData?.content || "");
       }
-      return data;
+      return data as AIPrompt[];
     },
   });
 
   const updateGuideMutation = useMutation({
     mutationFn: async ({ id, content }: { id: number; content: string }) => {
       const { data, error } = await supabase
-        .from("style_guides")
+        .from("ai_prompts")
         .update({ content, updated_at: new Date().toISOString() })
         .eq("id", id)
         .select();
@@ -65,11 +75,17 @@ const StyleGuides = () => {
   });
 
   const handleWatchGuideSave = () => {
-    updateGuideMutation.mutate({ id: 1, content: watchGuide });
+    const watchGuideData = guides?.find(guide => guide.name === "Watch Style Guide");
+    if (watchGuideData) {
+      updateGuideMutation.mutate({ id: watchGuideData.id, content: watchGuide });
+    }
   };
 
   const handleReferenceGuideSave = () => {
-    updateGuideMutation.mutate({ id: 8, content: referenceGuide });
+    const referenceGuideData = guides?.find(guide => guide.name === "Reference Style Guide");
+    if (referenceGuideData) {
+      updateGuideMutation.mutate({ id: referenceGuideData.id, content: referenceGuide });
+    }
   };
 
   return (

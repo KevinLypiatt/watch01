@@ -1,7 +1,7 @@
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/components/ui/use-toast";
 
-type TableName = "reference_descriptions" | "style_guides" | "watches";
+type TableName = "ai_prompts" | "reference_descriptions" | "watches";
 
 export const exportTableToCSV = async (tableName: TableName) => {
   try {

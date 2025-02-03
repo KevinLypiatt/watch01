@@ -5,6 +5,16 @@ import { useToast } from "@/hooks/use-toast";
 import { SystemPromptHeader } from "@/components/system-prompts/SystemPromptHeader";
 import { SystemPromptSection } from "@/components/system-prompts/SystemPromptSection";
 
+interface AIPrompt {
+  id: number;
+  name: string;
+  content: string;
+  purpose: string;
+  ai_model: string;
+  created_at: string;
+  updated_at: string;
+}
+
 const SystemPrompts = () => {
   const { toast } = useToast();
   const [watchPrompt, setWatchPrompt] = useState("");
@@ -14,9 +24,9 @@ const SystemPrompts = () => {
     queryKey: ["systemPrompts"],
     queryFn: async () => {
       const { data, error } = await supabase
-        .from("style_guides")
+        .from("ai_prompts")
         .select("*")
-        .in("id", [2, 5]);
+        .in("name", ["System Prompt", "Style Guide"]);
       
       if (error) {
         console.error("Error fetching system prompts:", error);
@@ -24,19 +34,19 @@ const SystemPrompts = () => {
       }
       
       if (data) {
-        const watchPromptData = data.find(prompt => prompt.id === 2);
-        const referencePromptData = data.find(prompt => prompt.id === 5);
+        const watchPromptData = data.find(prompt => prompt.name === "System Prompt");
+        const referencePromptData = data.find(prompt => prompt.name === "Style Guide");
         if (!watchPrompt) setWatchPrompt(watchPromptData?.content || "");
         if (!referencePrompt) setReferencePrompt(referencePromptData?.content || "");
       }
-      return data;
+      return data as AIPrompt[];
     },
   });
 
   const updatePromptMutation = useMutation({
     mutationFn: async ({ id, content }: { id: number; content: string }) => {
       const { data, error } = await supabase
-        .from("style_guides")
+        .from("ai_prompts")
         .update({ content, updated_at: new Date().toISOString() })
         .eq("id", id)
         .select();
@@ -65,11 +75,17 @@ const SystemPrompts = () => {
   });
 
   const handleWatchPromptSave = () => {
-    updatePromptMutation.mutate({ id: 2, content: watchPrompt });
+    const watchPromptData = prompts?.find(prompt => prompt.name === "System Prompt");
+    if (watchPromptData) {
+      updatePromptMutation.mutate({ id: watchPromptData.id, content: watchPrompt });
+    }
   };
 
   const handleReferencePromptSave = () => {
-    updatePromptMutation.mutate({ id: 5, content: referencePrompt });
+    const referencePromptData = prompts?.find(prompt => prompt.name === "Style Guide");
+    if (referencePromptData) {
+      updatePromptMutation.mutate({ id: referencePromptData.id, content: referencePrompt });
+    }
   };
 
   return (
