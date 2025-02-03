@@ -11,7 +11,7 @@ export type Database = {
     Tables: {
       ai_prompts: {
         Row: {
-          ai_model: string | null
+          ai_model: string
           content: string
           created_at: string | null
           id: number
@@ -19,7 +19,7 @@ export type Database = {
           updated_at: string | null
         }
         Insert: {
-          ai_model?: string | null
+          ai_model: string
           content: string
           created_at?: string | null
           id?: number
@@ -27,7 +27,7 @@ export type Database = {
           updated_at?: string | null
         }
         Update: {
-          ai_model?: string | null
+          ai_model?: string
           content?: string
           created_at?: string | null
           id?: number
