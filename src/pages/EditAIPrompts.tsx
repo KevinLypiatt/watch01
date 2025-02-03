@@ -18,7 +18,7 @@ export const EditAIPrompts = () => {
         activeGenerationModel={activeGenerationModel}
         setActiveGenerationModel={setActiveGenerationModel}
       />
-      <AIPromptManager />
+      <AIPromptManager activeGenerationModel={activeGenerationModel} />
     </div>
   );
 };

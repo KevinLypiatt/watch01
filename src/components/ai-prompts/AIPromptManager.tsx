@@ -16,7 +16,11 @@ interface AIPrompt {
   purpose: string;
 }
 
-export const AIPromptManager = () => {
+interface AIPromptManagerProps {
+  activeGenerationModel: string;
+}
+
+export const AIPromptManager = ({ activeGenerationModel }: AIPromptManagerProps) => {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [editingId, setEditingId] = useState<number | null>(null);
@@ -154,6 +158,7 @@ export const AIPromptManager = () => {
         onSave={handleSave}
         onEditCancel={() => setEditingId(null)}
         onContentChange={setEditedContent}
+        activeGenerationModel={activeGenerationModel}
       />
 
       <DeletePromptDialog

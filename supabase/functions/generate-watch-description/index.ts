@@ -73,6 +73,7 @@ serve(async (req) => {
 
     let response;
     if (activeModel === 'claude-3-opus-20240229') {
+      console.log('Using Claude model for generation');
       response = await fetch('https://api.anthropic.com/v1/messages', {
         method: 'POST',
         headers: {
@@ -92,7 +93,7 @@ serve(async (req) => {
         }),
       });
     } else {
-      // Using gpt-4o model
+      console.log('Using GPT-4 model for generation');
       response = await fetch('https://api.openai.com/v1/chat/completions', {
         method: 'POST',
         headers: {
@@ -110,6 +111,8 @@ serve(async (req) => {
     }
 
     const data = await response.json();
+    console.log('AI response received:', data);
+    
     const generatedText = activeModel === 'claude-3-opus-20240229'
       ? data.content[0].text
       : data.choices[0].message.content;
