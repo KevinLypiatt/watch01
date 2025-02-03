@@ -22,19 +22,28 @@ serve(async (req) => {
 
     const { referenceId, generateAll, brand, reference_name } = await req.json();
     
-    // Get both the system prompt and style guide
-    const { data: styleGuides } = await supabaseClient
-      .from('style_guides')
-      .select('content, name')
-      .in('name', ['reference_description_system_prompt', 'reference_description_style_guide']);
+    // Get both the system prompt and style guide from ai_prompts table
+    const { data: prompts, error: promptsError } = await supabaseClient
+      .from('ai_prompts')
+      .select('*')
+      .eq('purpose', 'reference')
+      .eq('ai_model', 'claude-3-opus-20240229');
 
-    if (!styleGuides || styleGuides.length < 2) {
+    if (promptsError) {
+      throw new Error(`Error fetching prompts: ${promptsError.message}`);
+    }
+
+    if (!prompts || prompts.length < 2) {
       throw new Error('Required prompts not found in the database');
     }
 
-    const systemPrompt = styleGuides.find(guide => guide.name === 'reference_description_system_prompt')?.content || '';
-    const styleGuide = styleGuides.find(guide => guide.name === 'reference_description_style_guide')?.content || '';
-    
+    const systemPrompt = prompts.find(p => p.name === 'System Prompt')?.content;
+    const styleGuide = prompts.find(p => p.name === 'Style Guide')?.content;
+
+    if (!systemPrompt || !styleGuide) {
+      throw new Error('Missing required prompts in the database');
+    }
+
     console.log('System prompt loaded:', systemPrompt);
     console.log('Style guide loaded:', styleGuide);
 
@@ -72,6 +81,12 @@ Reference Name: ${reference.reference_name}`;
       });
 
       const data = await response.json();
+      
+      if (!response.ok) {
+        console.error('Claude API error:', data);
+        throw new Error(`Claude API error: ${data.error?.message || 'Unknown error'}`);
+      }
+
       const generatedDescription = data.content[0].text;
       console.log('Generated description:', generatedDescription);
 

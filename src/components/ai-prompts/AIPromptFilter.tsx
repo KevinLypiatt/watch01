@@ -23,10 +23,10 @@ export const AIPromptFilter = ({
         value={selectedModel}
         onValueChange={onModelChange}
       >
-        <SelectTrigger className="w-[200px]">
+        <SelectTrigger className="w-[200px] bg-white">
           <SelectValue placeholder="Select AI Model" />
         </SelectTrigger>
-        <SelectContent>
+        <SelectContent className="bg-white shadow-lg z-50">
           <SelectItem value="all">All Models</SelectItem>
           {uniqueModels?.map((model) => (
             <SelectItem key={model} value={model}>
