@@ -5,6 +5,9 @@ import { Table, TableBody, TableHead, TableHeader, TableRow } from "@/components
 import { useToast } from "@/components/ui/use-toast";
 import { AIPromptRow } from "@/components/ai-prompts/AIPromptRow";
 import { DeletePromptDialog } from "@/components/ai-prompts/DeletePromptDialog";
+import { Button } from "@/components/ui/button";
+import { Download } from "lucide-react";
+import { exportTableToCSV } from "@/utils/csvExport";
 
 interface AIPrompt {
   id: number;
@@ -118,7 +121,18 @@ export const EditAIPrompts = () => {
 
   return (
     <div className="container mx-auto py-8">
-      <h1 className="text-2xl font-bold mb-6">Edit AI Prompts</h1>
+      <div className="flex justify-between items-center mb-6">
+        <h1 className="text-2xl font-bold">Edit AI Prompts</h1>
+        <Button
+          variant="outline"
+          size="sm"
+          className="gap-2"
+          onClick={() => exportTableToCSV("ai_prompts")}
+        >
+          <Download className="h-4 w-4" />
+          Export CSV
+        </Button>
+      </div>
       <div className="rounded-md border">
         <Table>
           <TableHeader>
