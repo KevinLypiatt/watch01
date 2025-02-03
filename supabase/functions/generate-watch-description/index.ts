@@ -25,26 +25,30 @@ serve(async (req) => {
     
     console.log('Watch data received:', JSON.stringify(watchData, null, 2));
 
-    // Get the system prompt and guide
-    console.log('Fetching style guides from ai_prompts table...');
-    const { data: styleGuides, error: styleGuidesError } = await supabaseClient
+    // Get the system prompt and guide for watch descriptions
+    console.log('Fetching prompts from ai_prompts table...');
+    const { data: prompts, error: promptsError } = await supabaseClient
       .from('ai_prompts')
       .select('*')
-      .in('name', ['watch_description_system_prompt', 'watch_description_guide'])
       .eq('purpose', 'watch')
       .eq('ai_model', 'claude-3-opus-20240229');
 
-    if (styleGuidesError) {
-      console.error('Error fetching style guides:', styleGuidesError);
-      throw styleGuidesError;
+    if (promptsError) {
+      console.error('Error fetching prompts:', promptsError);
+      throw promptsError;
     }
 
-    const systemPrompt = styleGuides?.find(g => g.name === 'watch_description_system_prompt')?.content || '';
-    const guide = styleGuides?.find(g => g.name === 'watch_description_guide')?.content || '';
+    console.log('Prompts fetched:', prompts);
+
+    const systemPrompt = prompts?.find(p => p.name === 'System Prompt')?.content || '';
+    const styleGuide = prompts?.find(p => p.name === 'Style Guide')?.content || '';
     
-    console.log('Style guides loaded:');
-    console.log('System prompt:', systemPrompt);
-    console.log('Style guide:', guide);
+    console.log('System prompt found:', systemPrompt);
+    console.log('Style guide found:', styleGuide);
+
+    if (!systemPrompt || !styleGuide) {
+      throw new Error('Required prompts not found in ai_prompts table');
+    }
 
     // Get the reference description
     console.log('Fetching reference description...');
@@ -62,7 +66,7 @@ serve(async (req) => {
     
     console.log('Reference description found:', referenceDesc?.reference_description || 'No reference found');
 
-    const prompt = `${systemPrompt}\n\nStyle Guide:\n${guide}\n\nReference Description:\n${referenceDesc?.reference_description || ''}\n\nWatch Details:\n${JSON.stringify(watchData, null, 2)}`;
+    const prompt = `${systemPrompt}\n\nStyle Guide:\n${styleGuide}\n\nReference Description:\n${referenceDesc?.reference_description || ''}\n\nWatch Details:\n${JSON.stringify(watchData, null, 2)}`;
     
     console.log('Final prompt being sent to Claude:', prompt);
 
