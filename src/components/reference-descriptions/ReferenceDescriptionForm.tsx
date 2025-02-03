@@ -50,6 +50,15 @@ export const ReferenceDescriptionForm = ({
         />
       </div>
       <div>
+        <Button
+          type="button"
+          variant="outline"
+          onClick={handleGenerateDescription}
+          disabled={isGenerating}
+          className="mb-4 bg-[#f3f3f3] hover:bg-[#e5e5e5]"
+        >
+          {isGenerating ? "Generating..." : "Generate Reference Description"}
+        </Button>
         <label htmlFor="description" className="block text-sm font-medium mb-1">
           Description
         </label>
@@ -61,17 +70,12 @@ export const ReferenceDescriptionForm = ({
         />
       </div>
       <div className="flex gap-4">
-        <Button type="submit">
-          Save Changes
-        </Button>
-        <Button
-          type="button"
+        <Button 
+          type="submit"
           variant="outline"
-          onClick={handleGenerateDescription}
-          disabled={isGenerating}
           className="bg-[#f3f3f3] hover:bg-[#e5e5e5]"
         >
-          {isGenerating ? "Generating..." : "Generate Reference Description"}
+          Save Changes
         </Button>
       </div>
     </form>

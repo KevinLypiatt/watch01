@@ -4,10 +4,11 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { DeletePromptDialog } from "@/components/ai-prompts/DeletePromptDialog";
 import { Button } from "@/components/ui/button";
-import { Download } from "lucide-react";
+import { Download, Home } from "lucide-react";
 import { exportTableToCSV } from "@/utils/csvExport";
 import { AIPromptFilter } from "@/components/ai-prompts/AIPromptFilter";
 import { AIPromptTable } from "@/components/ai-prompts/AIPromptTable";
+import { Link } from "react-router-dom";
 
 interface AIPrompt {
   id: number;
@@ -143,7 +144,12 @@ export const EditAIPrompts = () => {
   return (
     <div className="container mx-auto py-8">
       <div className="flex justify-between items-center mb-6">
-        <h1 className="text-2xl font-bold">Edit AI Prompts</h1>
+        <div className="flex items-center gap-4">
+          <Link to="/" className="hover:text-primary">
+            <Home className="w-6 h-6" />
+          </Link>
+          <h1 className="text-2xl font-bold">Edit AI Prompts</h1>
+        </div>
         <Button
           variant="outline"
           size="sm"

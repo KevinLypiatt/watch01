@@ -26,10 +26,18 @@ serve(async (req) => {
     console.log('Watch data received:', JSON.stringify(watchData, null, 2));
 
     // Get the system prompt and guide
-    const { data: styleGuides } = await supabaseClient
-      .from('style_guides')
+    console.log('Fetching style guides from ai_prompts table...');
+    const { data: styleGuides, error: styleGuidesError } = await supabaseClient
+      .from('ai_prompts')
       .select('*')
-      .in('name', ['watch_description_system_prompt', 'watch_description_guide']);
+      .in('name', ['watch_description_system_prompt', 'watch_description_guide'])
+      .eq('purpose', 'watch')
+      .eq('ai_model', 'claude-3-opus-20240229');
+
+    if (styleGuidesError) {
+      console.error('Error fetching style guides:', styleGuidesError);
+      throw styleGuidesError;
+    }
 
     const systemPrompt = styleGuides?.find(g => g.name === 'watch_description_system_prompt')?.content || '';
     const guide = styleGuides?.find(g => g.name === 'watch_description_guide')?.content || '';
@@ -39,12 +47,18 @@ serve(async (req) => {
     console.log('Style guide:', guide);
 
     // Get the reference description
-    const { data: referenceDesc } = await supabaseClient
+    console.log('Fetching reference description...');
+    const { data: referenceDesc, error: referenceError } = await supabaseClient
       .from('reference_descriptions')
       .select('reference_description')
       .eq('brand', brand)
       .eq('reference_name', model_reference)
       .maybeSingle();
+    
+    if (referenceError) {
+      console.error('Error fetching reference description:', referenceError);
+      throw referenceError;
+    }
     
     console.log('Reference description found:', referenceDesc?.reference_description || 'No reference found');
 
@@ -52,6 +66,7 @@ serve(async (req) => {
     
     console.log('Final prompt being sent to Claude:', prompt);
 
+    console.log('Sending request to Claude API...');
     const response = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
       headers: {
