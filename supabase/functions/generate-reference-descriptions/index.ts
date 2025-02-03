@@ -51,6 +51,7 @@ serve(async (req) => {
     async function generateDescription(reference: any) {
       console.log('Generating description for reference:', reference);
 
+      // Construct the complete prompt by concatenating system prompt, style guide, and reference details
       const prompt = `${systemPrompt}
 
 Style Guide:
