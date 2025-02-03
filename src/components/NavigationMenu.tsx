@@ -33,6 +33,9 @@ export const NavigationMenu = () => {
           <Link to="/reference-descriptions" className="text-lg">
             References
           </Link>
+          <Link to="/edit-ai-prompts" className="text-lg">
+            AI Prompts
+          </Link>
         </div>
       </div>
     </nav>
