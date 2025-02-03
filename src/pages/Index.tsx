@@ -17,7 +17,7 @@ const Index = () => {
     queryKey: ["introGuide"],
     queryFn: async () => {
       const { data, error } = await supabase
-        .from("style_guides")
+        .from("ai_prompts")
         .select("content")
         .eq("id", 6)
         .maybeSingle();
@@ -31,7 +31,7 @@ const Index = () => {
   const updateIntroMutation = useMutation({
     mutationFn: async (content: string) => {
       const { error } = await supabase
-        .from("style_guides")
+        .from("ai_prompts")
         .update({ content })
         .eq("id", 6);
       if (error) throw error;
