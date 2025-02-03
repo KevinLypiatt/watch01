@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { PageHeaderWithModel } from "@/components/shared/PageHeaderWithModel";
 import { ReferenceDescriptionHeader } from "@/components/reference-descriptions/ReferenceDescriptionHeader";
 import { ReferenceDescriptionTable } from "@/components/reference-descriptions/ReferenceDescriptionTable";
@@ -9,6 +9,14 @@ import { useQuery } from "@tanstack/react-query";
 const ReferenceDescriptions = () => {
   const [sortColumn, setSortColumn] = useState<string>('brand');
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
+  const [activeGenerationModel, setActiveGenerationModel] = useState<string>(() => {
+    const saved = localStorage.getItem("activeGenerationModel");
+    return saved || "claude-3-opus-20240229";
+  });
+
+  useEffect(() => {
+    localStorage.setItem("activeGenerationModel", activeGenerationModel);
+  }, [activeGenerationModel]);
 
   const { data: references = [], refetch } = useQuery({
     queryKey: ['references'],
@@ -50,7 +58,7 @@ const ReferenceDescriptions = () => {
 
   return (
     <div className="container mx-auto py-8">
-      <PageHeaderWithModel title="Reference Descriptions" />
+      <PageHeaderWithModel activeModel={activeGenerationModel} title="Reference Descriptions" />
       <div className="pt-16">
         <ReferenceDescriptionHeader
           isGenerating={generateMutation.isPending}

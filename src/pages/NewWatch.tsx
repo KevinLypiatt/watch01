@@ -5,7 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { WatchForm } from "@/components/watch/WatchForm";
-import { Home } from "lucide-react";
+import { PageHeaderWithModel } from "@/components/shared/PageHeaderWithModel";
 
 const NewWatch = () => {
   const navigate = useNavigate();
@@ -79,16 +79,13 @@ const NewWatch = () => {
 
   return (
     <div>
+      <PageHeaderWithModel title="New Watch" />
       <div className="container mx-auto py-20">
-        <div className="flex justify-between items-center mb-6">
-          <Link to="/" className="hover:text-primary">
-            <Home className="w-6 h-6" />
-          </Link>
+        <div className="mb-6">
           <Link to="/watch-list" className="text-primary hover:underline">
             To Watch List
           </Link>
         </div>
-        <h1 className="text-2xl font-bold mb-6">New Watch</h1>
         
         <WatchForm 
           formData={formData}

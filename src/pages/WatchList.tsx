@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { PageHeaderWithModel } from "@/components/shared/PageHeaderWithModel";
 import { WatchListHeader } from "@/components/watch-list/WatchListHeader";
 import { WatchListTable } from "@/components/watch-list/WatchListTable";
@@ -8,6 +8,14 @@ import { useQuery } from "@tanstack/react-query";
 const WatchList = () => {
   const [sortColumn, setSortColumn] = useState<string>('brand');
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
+  const [activeGenerationModel, setActiveGenerationModel] = useState<string>(() => {
+    const saved = localStorage.getItem("activeGenerationModel");
+    return saved || "claude-3-opus-20240229";
+  });
+
+  useEffect(() => {
+    localStorage.setItem("activeGenerationModel", activeGenerationModel);
+  }, [activeGenerationModel]);
 
   const { data: watches = [], refetch } = useQuery({
     queryKey: ['watches', sortColumn, sortDirection],
@@ -47,7 +55,7 @@ const WatchList = () => {
 
   return (
     <div className="container mx-auto py-8">
-      <PageHeaderWithModel title="Watch List" />
+      <PageHeaderWithModel activeModel={activeGenerationModel} title="Watch List" />
       <div className="pt-16">
         <WatchListHeader />
         <WatchListTable 

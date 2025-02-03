@@ -4,8 +4,8 @@ import { useMutation } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
-import { Home } from "lucide-react";
 import { ReferenceDescriptionForm } from "@/components/reference-descriptions/ReferenceDescriptionForm";
+import { PageHeaderWithModel } from "@/components/shared/PageHeaderWithModel";
 
 const NewReferenceDescription = () => {
   const navigate = useNavigate();
@@ -99,30 +99,26 @@ const NewReferenceDescription = () => {
   };
 
   return (
-    <div className="container mx-auto py-6">
-      <div className="flex justify-between items-center mb-6">
-        <Link to="/" className="hover:text-primary">
-          <Home className="w-6 h-6" />
-        </Link>
-        <Link to="/reference-descriptions" className="text-primary hover:underline">
-          To Reference List
-        </Link>
+    <div>
+      <PageHeaderWithModel title="New Reference Description" />
+      <div className="container mx-auto py-20">
+        <div className="mb-6">
+          <Link to="/reference-descriptions" className="text-primary hover:underline">
+            To Reference List
+          </Link>
+        </div>
+        <ReferenceDescriptionForm
+          brand={brand}
+          referenceName={referenceName}
+          description={description}
+          isGenerating={isGenerating}
+          handleBrandChange={(e) => setBrand(e.target.value)}
+          handleReferenceNameChange={(e) => setReferenceName(e.target.value)}
+          handleDescriptionChange={(e) => setDescription(e.target.value)}
+          handleSubmit={handleSubmit}
+          handleGenerateDescription={handleGenerateDescription}
+        />
       </div>
-      <div className="mb-6">
-        <h1 className="text-2xl font-bold">Add New Reference Description</h1>
-        <p className="text-muted-foreground">Create a new reference description</p>
-      </div>
-      <ReferenceDescriptionForm
-        brand={brand}
-        referenceName={referenceName}
-        description={description}
-        isGenerating={isGenerating}
-        handleBrandChange={(e) => setBrand(e.target.value)}
-        handleReferenceNameChange={(e) => setReferenceName(e.target.value)}
-        handleDescriptionChange={(e) => setDescription(e.target.value)}
-        handleSubmit={handleSubmit}
-        handleGenerateDescription={handleGenerateDescription}
-      />
     </div>
   );
 };
