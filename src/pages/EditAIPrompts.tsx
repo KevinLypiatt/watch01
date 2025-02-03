@@ -26,7 +26,7 @@ export const EditAIPrompts = () => {
   const [editedContent, setEditedContent] = useState("");
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [selectedPromptId, setSelectedPromptId] = useState<number | null>(null);
-  const [selectedModel, setSelectedModel] = useState<string>("");
+  const [selectedModel, setSelectedModel] = useState<string>("all");
 
   const { data: aiPrompts, isLoading } = useQuery({
     queryKey: ["aiPrompts", selectedModel],
@@ -36,7 +36,7 @@ export const EditAIPrompts = () => {
         .select("*")
         .order("id");
       
-      if (selectedModel) {
+      if (selectedModel && selectedModel !== "all") {
         query = query.eq("ai_model", selectedModel);
       }
       

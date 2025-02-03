@@ -27,7 +27,7 @@ export const AIPromptFilter = ({
           <SelectValue placeholder="Select AI Model" />
         </SelectTrigger>
         <SelectContent>
-          <SelectItem value="">All Models</SelectItem>
+          <SelectItem value="all">All Models</SelectItem>
           {uniqueModels?.map((model) => (
             <SelectItem key={model} value={model}>
               {model}
