@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
@@ -9,6 +9,13 @@ import { exportTableToCSV } from "@/utils/csvExport";
 import { AIPromptFilter } from "@/components/ai-prompts/AIPromptFilter";
 import { AIPromptTable } from "@/components/ai-prompts/AIPromptTable";
 import { Link } from "react-router-dom";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 interface AIPrompt {
   id: number;
@@ -28,6 +35,14 @@ export const EditAIPrompts = () => {
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [selectedPromptId, setSelectedPromptId] = useState<number | null>(null);
   const [selectedModel, setSelectedModel] = useState<string>("all");
+  const [activeGenerationModel, setActiveGenerationModel] = useState<string>(() => {
+    const saved = localStorage.getItem("activeGenerationModel");
+    return saved || "claude-3-opus-20240229";
+  });
+
+  useEffect(() => {
+    localStorage.setItem("activeGenerationModel", activeGenerationModel);
+  }, [activeGenerationModel]);
 
   const { data: aiPrompts, isLoading } = useQuery({
     queryKey: ["aiPrompts", selectedModel],
@@ -137,6 +152,11 @@ export const EditAIPrompts = () => {
     }
   };
 
+  const availableGenerationModels = [
+    { id: "claude-3-opus-20240229", name: "Claude 3 Opus" },
+    { id: "gpt-4o", name: "GPT-4 Turbo" },
+  ];
+
   if (isLoading) {
     return <div className="p-4">Loading...</div>;
   }
@@ -150,15 +170,37 @@ export const EditAIPrompts = () => {
           </Link>
           <h1 className="text-2xl font-bold">Edit AI Prompts</h1>
         </div>
-        <Button
-          variant="outline"
-          size="sm"
-          className="gap-2"
-          onClick={() => exportTableToCSV("ai_prompts")}
-        >
-          <Download className="h-4 w-4" />
-          Export CSV
-        </Button>
+        <div className="flex items-center gap-4">
+          <div className="flex flex-col">
+            <label htmlFor="generationModel" className="text-sm font-medium mb-1">
+              Active Generation Model
+            </label>
+            <Select
+              value={activeGenerationModel}
+              onValueChange={setActiveGenerationModel}
+            >
+              <SelectTrigger className="w-[200px]">
+                <SelectValue placeholder="Select model" />
+              </SelectTrigger>
+              <SelectContent>
+                {availableGenerationModels.map((model) => (
+                  <SelectItem key={model.id} value={model.id}>
+                    {model.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          <Button
+            variant="outline"
+            size="sm"
+            className="gap-2"
+            onClick={() => exportTableToCSV("ai_prompts")}
+          >
+            <Download className="h-4 w-4" />
+            Export CSV
+          </Button>
+        </div>
       </div>
 
       <AIPromptFilter

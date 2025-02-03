@@ -20,10 +20,11 @@ serve(async (req) => {
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     );
 
-    const { watchData } = await req.json();
+    const { watchData, activeModel } = await req.json();
     const { brand, model_reference } = watchData;
     
     console.log('Watch data received:', JSON.stringify(watchData, null, 2));
+    console.log('Active model:', activeModel);
 
     // Get the system prompt and guide for watch descriptions
     console.log('Fetching prompts from ai_prompts table...');
@@ -31,7 +32,7 @@ serve(async (req) => {
       .from('ai_prompts')
       .select('*')
       .eq('purpose', 'watch')
-      .eq('ai_model', 'claude-3-opus-20240229');
+      .eq('ai_model', activeModel);
 
     if (promptsError) {
       console.error('Error fetching prompts:', promptsError);
@@ -68,44 +69,58 @@ serve(async (req) => {
 
     const prompt = `${systemPrompt}\n\nStyle Guide:\n${styleGuide}\n\nReference Description:\n${referenceDesc?.reference_description || ''}\n\nWatch Details:\n${JSON.stringify(watchData, null, 2)}`;
     
-    console.log('Final prompt being sent to Claude:', prompt);
+    console.log('Final prompt being sent to AI model:', prompt);
 
-    console.log('Sending request to Claude API...');
-    const response = await fetch('https://api.anthropic.com/v1/messages', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'x-api-key': Deno.env.get('ANTHROPIC_API_KEY') || '',
-        'anthropic-version': '2023-06-01',
-      },
-      body: JSON.stringify({
-        model: 'claude-3-opus-20240229',
-        max_tokens: 1024,
-        messages: [
-          {
-            role: 'user',
-            content: prompt,
-          },
-        ],
-      }),
-    });
+    let response;
+    if (activeModel.startsWith('claude')) {
+      response = await fetch('https://api.anthropic.com/v1/messages', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-api-key': Deno.env.get('ANTHROPIC_API_KEY') || '',
+          'anthropic-version': '2023-06-01',
+        },
+        body: JSON.stringify({
+          model: activeModel,
+          max_tokens: 1024,
+          messages: [
+            {
+              role: 'user',
+              content: prompt,
+            },
+          ],
+        }),
+      });
+    } else {
+      response = await fetch('https://api.openai.com/v1/chat/completions', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${Deno.env.get('OPENAI_API_KEY')}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          model: activeModel,
+          messages: [
+            { role: 'system', content: 'You are a helpful assistant that generates watch descriptions.' },
+            { role: 'user', content: prompt }
+          ],
+        }),
+      });
+    }
 
     const data = await response.json();
-    console.log('Claude response received:', data);
+    const generatedText = activeModel.startsWith('claude') 
+      ? data.content[0].text
+      : data.choices[0].message.content;
 
-    return new Response(
-      JSON.stringify({ description: data.content[0].text }),
-      { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-    );
-
+    return new Response(JSON.stringify({ generatedText }), {
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+    });
   } catch (error) {
     console.error('Error in generate-watch-description function:', error);
-    return new Response(
-      JSON.stringify({ error: error.message }),
-      { 
-        status: 500,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-      }
-    );
+    return new Response(JSON.stringify({ error: error.message }), {
+      status: 500,
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+    });
   }
 });
