@@ -23,7 +23,7 @@ const EditReferenceDescription = () => {
       const { data, error } = await supabase
         .from('reference_descriptions')
         .select('*')
-        .eq('reference_id', id)
+        .eq('reference_id', parseInt(id as string))
         .single();
       
       if (error) throw error;
@@ -46,7 +46,7 @@ const EditReferenceDescription = () => {
           reference_name: referenceName,
           reference_description: description,
         })
-        .eq('reference_id', id);
+        .eq('reference_id', parseInt(id as string));
 
       if (error) throw error;
     },
@@ -70,7 +70,7 @@ const EditReferenceDescription = () => {
     mutationFn: async () => {
       const { data, error } = await supabase.functions.invoke('generate-reference-descriptions', {
         body: { 
-          referenceId: id,
+          referenceId: parseInt(id as string),
           brand,
           reference_name: referenceName
         }
