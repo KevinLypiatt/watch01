@@ -72,7 +72,7 @@ serve(async (req) => {
     console.log('Final prompt being sent to AI model:', prompt);
 
     let response;
-    if (activeModel.startsWith('claude')) {
+    if (activeModel === 'claude-3-opus-20240229') {
       response = await fetch('https://api.anthropic.com/v1/messages', {
         method: 'POST',
         headers: {
@@ -92,6 +92,7 @@ serve(async (req) => {
         }),
       });
     } else {
+      // Using gpt-4o model
       response = await fetch('https://api.openai.com/v1/chat/completions', {
         method: 'POST',
         headers: {
@@ -99,7 +100,7 @@ serve(async (req) => {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          model: activeModel,
+          model: 'gpt-4o',
           messages: [
             { role: 'system', content: 'You are a helpful assistant that generates watch descriptions.' },
             { role: 'user', content: prompt }
@@ -109,11 +110,11 @@ serve(async (req) => {
     }
 
     const data = await response.json();
-    const generatedText = activeModel.startsWith('claude') 
+    const generatedText = activeModel === 'claude-3-opus-20240229'
       ? data.content[0].text
       : data.choices[0].message.content;
 
-    return new Response(JSON.stringify({ generatedText }), {
+    return new Response(JSON.stringify({ description: generatedText }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
   } catch (error) {

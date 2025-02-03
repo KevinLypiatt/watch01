@@ -55,7 +55,7 @@ export const ReferenceDescriptionTable = ({
                     <Button
                       variant="ghost"
                       size="icon"
-                      onClick={() => navigate(`/edit-reference/${reference.reference_id}`)}
+                      onClick={() => navigate(`/reference-descriptions/${reference.reference_id}`)}
                     >
                       <Edit className="h-4 w-4" />
                     </Button>
