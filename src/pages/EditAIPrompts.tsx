@@ -153,8 +153,8 @@ export const EditAIPrompts = () => {
   };
 
   const availableGenerationModels = [
-    { id: "claude-3-opus-20240229", name: "Claude 3 Opus" },
-    { id: "gpt-4o", name: "GPT-4 Turbo" },
+    "claude-3-opus-20240229",
+    "gpt-4o"
   ];
 
   if (isLoading) {
@@ -179,13 +179,13 @@ export const EditAIPrompts = () => {
               value={activeGenerationModel}
               onValueChange={setActiveGenerationModel}
             >
-              <SelectTrigger className="w-[200px]">
+              <SelectTrigger className="w-[300px]">
                 <SelectValue placeholder="Select model" />
               </SelectTrigger>
               <SelectContent>
                 {availableGenerationModels.map((model) => (
-                  <SelectItem key={model.id} value={model.id}>
-                    {model.name}
+                  <SelectItem key={model} value={model}>
+                    {model}
                   </SelectItem>
                 ))}
               </SelectContent>
