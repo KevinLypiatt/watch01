@@ -12,6 +12,7 @@ interface ReferenceDescriptionFormProps {
   handleDescriptionChange: (e: React.ChangeEvent<HTMLTextAreaElement>) => void;
   handleSubmit: (e: React.FormEvent) => void;
   handleGenerateDescription: () => void;
+  id?: string;  // Make id optional since it's not always needed
 }
 
 export const ReferenceDescriptionForm = ({
