@@ -1,20 +1,13 @@
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { Table, TableBody, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { useToast } from "@/hooks/use-toast";
-import { AIPromptRow } from "@/components/ai-prompts/AIPromptRow";
 import { DeletePromptDialog } from "@/components/ai-prompts/DeletePromptDialog";
 import { Button } from "@/components/ui/button";
 import { Download } from "lucide-react";
 import { exportTableToCSV } from "@/utils/csvExport";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { AIPromptFilter } from "@/components/ai-prompts/AIPromptFilter";
+import { AIPromptTable } from "@/components/ai-prompts/AIPromptTable";
 
 interface AIPrompt {
   id: number;
@@ -62,7 +55,6 @@ export const EditAIPrompts = () => {
       
       if (error) throw error;
       
-      // Get unique models using Set
       const uniqueModelsSet = new Set(data.map(item => item.ai_model));
       return Array.from(uniqueModelsSet);
     },
@@ -163,52 +155,22 @@ export const EditAIPrompts = () => {
         </Button>
       </div>
 
-      <div className="mb-6">
-        <Select
-          value={selectedModel}
-          onValueChange={(value) => setSelectedModel(value)}
-        >
-          <SelectTrigger className="w-[200px]">
-            <SelectValue placeholder="Select AI Model" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="">All Models</SelectItem>
-            {uniqueModels?.map((model) => (
-              <SelectItem key={model} value={model}>
-                {model}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      </div>
+      <AIPromptFilter
+        selectedModel={selectedModel}
+        uniqueModels={uniqueModels}
+        onModelChange={setSelectedModel}
+      />
 
-      <div className="rounded-md border">
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead className="w-[150px]">AI Model</TableHead>
-              <TableHead className="w-[200px]">Name</TableHead>
-              <TableHead>Content</TableHead>
-              <TableHead className="w-[100px]">Actions</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {aiPrompts?.map((prompt) => (
-              <AIPromptRow
-                key={prompt.id}
-                prompt={prompt}
-                editingId={editingId}
-                editedContent={editedContent}
-                onEditClick={handleEditClick}
-                onDeleteClick={handleDeleteClick}
-                onSave={handleSave}
-                onEditCancel={() => setEditingId(null)}
-                onContentChange={setEditedContent}
-              />
-            ))}
-          </TableBody>
-        </Table>
-      </div>
+      <AIPromptTable
+        prompts={aiPrompts}
+        editingId={editingId}
+        editedContent={editedContent}
+        onEditClick={handleEditClick}
+        onDeleteClick={handleDeleteClick}
+        onSave={handleSave}
+        onEditCancel={() => setEditingId(null)}
+        onContentChange={setEditedContent}
+      />
 
       <DeletePromptDialog
         open={deleteDialogOpen}
