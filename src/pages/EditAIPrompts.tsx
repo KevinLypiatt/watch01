@@ -1,24 +1,14 @@
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Button } from "@/components/ui/button";
-import { Edit, Trash } from "lucide-react";
-import { Textarea } from "@/components/ui/textarea";
+import { Table, TableBody, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { useToast } from "@/components/ui/use-toast";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
+import { AIPromptRow } from "@/components/ai-prompts/AIPromptRow";
+import { DeletePromptDialog } from "@/components/ai-prompts/DeletePromptDialog";
 
-interface StyleGuide {
+interface AIPrompt {
   id: number;
+  ai_model: string | null;
   name: string;
   content: string;
   created_at: string;
@@ -31,25 +21,25 @@ export const EditAIPrompts = () => {
   const [editingId, setEditingId] = useState<number | null>(null);
   const [editedContent, setEditedContent] = useState("");
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
-  const [selectedGuideId, setSelectedGuideId] = useState<number | null>(null);
+  const [selectedPromptId, setSelectedPromptId] = useState<number | null>(null);
 
-  const { data: styleGuides, isLoading } = useQuery({
-    queryKey: ["styleGuides"],
+  const { data: aiPrompts, isLoading } = useQuery({
+    queryKey: ["aiPrompts"],
     queryFn: async () => {
       const { data, error } = await supabase
-        .from("style_guides")
+        .from("ai_prompts")
         .select("*")
         .order("id");
       
       if (error) throw error;
-      return data as StyleGuide[];
+      return data as AIPrompt[];
     },
   });
 
   const updateMutation = useMutation({
     mutationFn: async ({ id, content }: { id: number; content: string }) => {
       const { data, error } = await supabase
-        .from("style_guides")
+        .from("ai_prompts")
         .update({ content, updated_at: new Date().toISOString() })
         .eq("id", id)
         .select();
@@ -58,10 +48,10 @@ export const EditAIPrompts = () => {
       return data;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["styleGuides"] });
+      queryClient.invalidateQueries({ queryKey: ["aiPrompts"] });
       toast({
         title: "Success",
-        description: "Style guide updated successfully",
+        description: "AI prompt updated successfully",
       });
       setEditingId(null);
     },
@@ -69,7 +59,7 @@ export const EditAIPrompts = () => {
       console.error("Update error:", error);
       toast({
         title: "Error",
-        description: "Failed to update style guide",
+        description: "Failed to update AI prompt",
         variant: "destructive",
       });
     },
@@ -78,17 +68,17 @@ export const EditAIPrompts = () => {
   const deleteMutation = useMutation({
     mutationFn: async (id: number) => {
       const { error } = await supabase
-        .from("style_guides")
+        .from("ai_prompts")
         .delete()
         .eq("id", id);
 
       if (error) throw error;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["styleGuides"] });
+      queryClient.invalidateQueries({ queryKey: ["aiPrompts"] });
       toast({
         title: "Success",
-        description: "Style guide deleted successfully",
+        description: "AI prompt deleted successfully",
       });
       setDeleteDialogOpen(false);
     },
@@ -96,15 +86,15 @@ export const EditAIPrompts = () => {
       console.error("Delete error:", error);
       toast({
         title: "Error",
-        description: "Failed to delete style guide",
+        description: "Failed to delete AI prompt",
         variant: "destructive",
       });
     },
   });
 
-  const handleEditClick = (guide: StyleGuide) => {
-    setEditingId(guide.id);
-    setEditedContent(guide.content);
+  const handleEditClick = (prompt: AIPrompt) => {
+    setEditingId(prompt.id);
+    setEditedContent(prompt.content);
   };
 
   const handleSave = async (id: number) => {
@@ -112,13 +102,13 @@ export const EditAIPrompts = () => {
   };
 
   const handleDeleteClick = (id: number) => {
-    setSelectedGuideId(id);
+    setSelectedPromptId(id);
     setDeleteDialogOpen(true);
   };
 
   const handleDeleteConfirm = async () => {
-    if (selectedGuideId) {
-      await deleteMutation.mutate(selectedGuideId);
+    if (selectedPromptId) {
+      await deleteMutation.mutate(selectedPromptId);
     }
   };
 
@@ -133,91 +123,35 @@ export const EditAIPrompts = () => {
         <Table>
           <TableHeader>
             <TableRow>
+              <TableHead className="w-[150px]">AI Model</TableHead>
               <TableHead className="w-[200px]">Name</TableHead>
               <TableHead>Content</TableHead>
               <TableHead className="w-[100px]">Actions</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
-            {styleGuides?.map((guide) => (
-              <TableRow key={guide.id}>
-                <TableCell className="font-medium">{guide.name}</TableCell>
-                <TableCell>
-                  {editingId === guide.id ? (
-                    <div className="flex flex-col gap-2">
-                      <Textarea
-                        value={editedContent}
-                        onChange={(e) => setEditedContent(e.target.value)}
-                        className="min-h-[100px]"
-                      />
-                      <div className="flex gap-2">
-                        <Button
-                          size="sm"
-                          onClick={() => handleSave(guide.id)}
-                          disabled={updateMutation.isPending}
-                        >
-                          Save
-                        </Button>
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          onClick={() => setEditingId(null)}
-                        >
-                          Cancel
-                        </Button>
-                      </div>
-                    </div>
-                  ) : (
-                    <div className="whitespace-pre-wrap">{guide.content}</div>
-                  )}
-                </TableCell>
-                <TableCell>
-                  <div className="flex gap-2">
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      onClick={() => handleEditClick(guide)}
-                      disabled={editingId !== null}
-                    >
-                      <Edit className="h-4 w-4" />
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      onClick={() => handleDeleteClick(guide.id)}
-                      disabled={editingId !== null}
-                    >
-                      <Trash className="h-4 w-4" />
-                    </Button>
-                  </div>
-                </TableCell>
-              </TableRow>
+            {aiPrompts?.map((prompt) => (
+              <AIPromptRow
+                key={prompt.id}
+                prompt={prompt}
+                editingId={editingId}
+                editedContent={editedContent}
+                onEditClick={handleEditClick}
+                onDeleteClick={handleDeleteClick}
+                onSave={handleSave}
+                onEditCancel={() => setEditingId(null)}
+                onContentChange={setEditedContent}
+              />
             ))}
           </TableBody>
         </Table>
       </div>
 
-      <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Are you sure?</AlertDialogTitle>
-            <AlertDialogDescription>
-              This action cannot be undone. This will permanently delete the style guide.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel onClick={() => setDeleteDialogOpen(false)}>
-              Cancel
-            </AlertDialogCancel>
-            <AlertDialogAction
-              onClick={handleDeleteConfirm}
-              className="bg-red-600 hover:bg-red-700"
-            >
-              Delete
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+      <DeletePromptDialog
+        open={deleteDialogOpen}
+        onOpenChange={setDeleteDialogOpen}
+        onConfirm={handleDeleteConfirm}
+      />
     </div>
   );
 };

@@ -9,6 +9,33 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      ai_prompts: {
+        Row: {
+          ai_model: string | null
+          content: string
+          created_at: string | null
+          id: number
+          name: string
+          updated_at: string | null
+        }
+        Insert: {
+          ai_model?: string | null
+          content: string
+          created_at?: string | null
+          id?: number
+          name: string
+          updated_at?: string | null
+        }
+        Update: {
+          ai_model?: string | null
+          content?: string
+          created_at?: string | null
+          id?: number
+          name?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       reference_descriptions: {
         Row: {
           brand: string | null
@@ -27,30 +54,6 @@ export type Database = {
           reference_description?: string | null
           reference_id?: number
           reference_name?: string | null
-        }
-        Relationships: []
-      }
-      style_guides: {
-        Row: {
-          content: string
-          created_at: string | null
-          id: number
-          name: string
-          updated_at: string | null
-        }
-        Insert: {
-          content: string
-          created_at?: string | null
-          id?: number
-          name: string
-          updated_at?: string | null
-        }
-        Update: {
-          content?: string
-          created_at?: string | null
-          id?: number
-          name?: string
-          updated_at?: string | null
         }
         Relationships: []
       }
