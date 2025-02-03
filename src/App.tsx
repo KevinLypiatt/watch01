@@ -10,8 +10,7 @@ import EditReferenceDescription from "./pages/EditReferenceDescription";
 import EditWatch from "./pages/EditWatch";
 import NewWatch from "./pages/NewWatch";
 import NewReferenceDescription from "./pages/NewReferenceDescription";
-import StyleGuides from "./pages/StyleGuides";
-import SystemPrompts from "./pages/SystemPrompts";
+import { EditAIPrompts } from "./pages/EditAIPrompts";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -30,8 +29,7 @@ const App = () => (
           <Route path="/reference-descriptions" element={<ReferenceDescriptions />} />
           <Route path="/reference-descriptions/:id" element={<EditReferenceDescription />} />
           <Route path="/reference-descriptions/new" element={<NewReferenceDescription />} />
-          <Route path="/style-guides" element={<StyleGuides />} />
-          <Route path="/system-prompts" element={<SystemPrompts />} />
+          <Route path="/edit-ai-prompts" element={<EditAIPrompts />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>

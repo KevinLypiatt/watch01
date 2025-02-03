@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import { Plus, List, FilePlus, Database, BookOpen, FileText, Book } from "lucide-react";
+import { Plus, List, FilePlus, Database, BookOpen, FileText } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
@@ -88,17 +88,10 @@ const Index = () => {
           </Button>
         </Link>
         
-        <Link to="/system-prompts">
+        <Link to="/edit-ai-prompts">
           <Button variant="outline" className="w-full h-16 flex items-center justify-center gap-2">
             <FileText className="w-5 h-5" />
-            <span>System Prompts</span>
-          </Button>
-        </Link>
-        
-        <Link to="/style-guides">
-          <Button variant="outline" className="w-full h-16 flex items-center justify-center gap-2">
-            <Book className="w-5 h-5" />
-            <span>Style Guides</span>
+            <span>Edit AI Prompts</span>
           </Button>
         </Link>
         
