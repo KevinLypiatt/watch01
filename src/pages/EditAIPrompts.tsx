@@ -8,14 +8,22 @@ import { DeletePromptDialog } from "@/components/ai-prompts/DeletePromptDialog";
 import { Button } from "@/components/ui/button";
 import { Download } from "lucide-react";
 import { exportTableToCSV } from "@/utils/csvExport";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 interface AIPrompt {
   id: number;
-  ai_model: string | null;
+  ai_model: string;
   name: string;
   content: string;
   created_at: string;
   updated_at: string;
+  purpose: string;
 }
 
 export const EditAIPrompts = () => {
@@ -25,17 +33,36 @@ export const EditAIPrompts = () => {
   const [editedContent, setEditedContent] = useState("");
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [selectedPromptId, setSelectedPromptId] = useState<number | null>(null);
+  const [selectedModel, setSelectedModel] = useState<string>("");
 
   const { data: aiPrompts, isLoading } = useQuery({
-    queryKey: ["aiPrompts"],
+    queryKey: ["aiPrompts", selectedModel],
     queryFn: async () => {
-      const { data, error } = await supabase
+      let query = supabase
         .from("ai_prompts")
         .select("*")
         .order("id");
       
+      if (selectedModel) {
+        query = query.eq("ai_model", selectedModel);
+      }
+      
+      const { data, error } = await query;
       if (error) throw error;
       return data as AIPrompt[];
+    },
+  });
+
+  const { data: uniqueModels } = useQuery({
+    queryKey: ["uniqueAiModels"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("ai_prompts")
+        .select("ai_model")
+        .distinct();
+      
+      if (error) throw error;
+      return data.map(item => item.ai_model);
     },
   });
 
@@ -133,6 +160,26 @@ export const EditAIPrompts = () => {
           Export CSV
         </Button>
       </div>
+
+      <div className="mb-6">
+        <Select
+          value={selectedModel}
+          onValueChange={(value) => setSelectedModel(value)}
+        >
+          <SelectTrigger className="w-[200px]">
+            <SelectValue placeholder="Select AI Model" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="">All Models</SelectItem>
+            {uniqueModels?.map((model) => (
+              <SelectItem key={model} value={model}>
+                {model}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
+
       <div className="rounded-md border">
         <Table>
           <TableHeader>
