@@ -1,123 +1,21 @@
 import { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
-import { PageHeader } from "@/components/PageHeader";
+import { PageHeaderWithModel } from "@/components/shared/PageHeaderWithModel";
 import { ReferenceDescriptionHeader } from "@/components/reference-descriptions/ReferenceDescriptionHeader";
-import { ReferenceDescriptionFilters } from "@/components/reference-descriptions/ReferenceDescriptionFilters";
 import { ReferenceDescriptionTable } from "@/components/reference-descriptions/ReferenceDescriptionTable";
 import { useGenerateDescriptions } from "@/hooks/useGenerateDescriptions";
-import { useToast } from "@/hooks/use-toast";
 
 const ReferenceDescriptions = () => {
-  const { toast } = useToast();
-  const [searchInput, setSearchInput] = useState("");
-  const [brandInput, setBrandInput] = useState("");
-  const [referenceInput, setReferenceInput] = useState("");
-  const [searchTerm, setSearchTerm] = useState("");
-  const [brandFilter, setBrandFilter] = useState("");
-  const [referenceFilter, setReferenceFilter] = useState("");
-  const [sortColumn, setSortColumn] = useState<string>("brand");
-  const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
-
-  const generateMutation = useGenerateDescriptions();
-
-  const { data: references, isLoading, refetch } = useQuery({
-    queryKey: ["references", brandFilter, referenceFilter, searchTerm, sortColumn, sortDirection],
-    queryFn: async () => {
-      let query = supabase.from("reference_descriptions").select("*");
-
-      if (brandFilter) {
-        query = query.ilike("brand", `%${brandFilter}%`);
-      }
-      if (referenceFilter) {
-        query = query.ilike("reference_name", `%${referenceFilter}%`);
-      }
-      if (searchTerm) {
-        query = query.or(
-          `brand.ilike.%${searchTerm}%,reference_name.ilike.%${searchTerm}%,reference_description.ilike.%${searchTerm}%`
-        );
-      }
-      
-      query = query.order(sortColumn, { ascending: sortDirection === 'asc' });
-
-      const { data, error } = await query;
-      if (error) throw error;
-      return data || [];
-    },
-  });
-
-  const handleSort = (column: string) => {
-    if (sortColumn === column) {
-      setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
-    } else {
-      setSortColumn(column);
-      setSortDirection('asc');
-    }
-  };
-
-  const handleSearch = () => {
-    setSearchTerm(searchInput);
-    setBrandFilter(brandInput);
-    setReferenceFilter(referenceInput);
-  };
-
-  const handleDelete = async (id: number) => {
-    try {
-      const { error } = await supabase
-        .from('reference_descriptions')
-        .delete()
-        .eq('reference_id', id);
-      
-      if (error) throw error;
-      
-      toast({
-        title: "Reference deleted",
-        description: "The reference has been successfully deleted.",
-      });
-      
-      refetch();
-    } catch (error) {
-      console.error('Error deleting reference:', error);
-      toast({
-        title: "Error",
-        description: "Failed to delete the reference. Please try again.",
-        variant: "destructive",
-      });
-    }
-  };
-
-  const handleGenerateAll = () => {
-    generateMutation.mutate();
-  };
-
-  if (isLoading) {
-    return <div className="flex items-center justify-center min-h-screen">Loading...</div>;
-  }
+  const { isGenerating, handleGenerateAll } = useGenerateDescriptions();
 
   return (
-    <div>
-      <PageHeader />
-      <div className="container mx-auto py-20">
+    <div className="container mx-auto py-8">
+      <PageHeaderWithModel title="Reference Descriptions" />
+      <div className="pt-16">
         <ReferenceDescriptionHeader
-          isGenerating={generateMutation.isPending}
+          isGenerating={isGenerating}
           handleGenerateAll={handleGenerateAll}
         />
-
-        <ReferenceDescriptionFilters
-          brandInput={brandInput}
-          referenceInput={referenceInput}
-          searchInput={searchInput}
-          setBrandInput={setBrandInput}
-          setReferenceInput={setReferenceInput}
-          setSearchInput={setSearchInput}
-          handleSearch={handleSearch}
-        />
-
-        <ReferenceDescriptionTable
-          references={references || []}
-          handleSort={handleSort}
-          handleDelete={handleDelete}
-        />
+        <ReferenceDescriptionTable />
       </div>
     </div>
   );

@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { AIPromptHeader } from "@/components/ai-prompts/AIPromptHeader";
 import { AIPromptManager } from "@/components/ai-prompts/AIPromptManager";
+import { PageHeaderWithModel } from "@/components/shared/PageHeaderWithModel";
 
 export const EditAIPrompts = () => {
   const [activeGenerationModel, setActiveGenerationModel] = useState<string>(() => {
@@ -14,11 +15,14 @@ export const EditAIPrompts = () => {
 
   return (
     <div className="container mx-auto py-8">
-      <AIPromptHeader
-        activeGenerationModel={activeGenerationModel}
-        setActiveGenerationModel={setActiveGenerationModel}
-      />
-      <AIPromptManager activeGenerationModel={activeGenerationModel} />
+      <PageHeaderWithModel activeModel={activeGenerationModel} title="Edit AI Prompts" />
+      <div className="pt-16">
+        <AIPromptHeader
+          activeGenerationModel={activeGenerationModel}
+          setActiveGenerationModel={setActiveGenerationModel}
+        />
+        <AIPromptManager activeGenerationModel={activeGenerationModel} />
+      </div>
     </div>
   );
 };

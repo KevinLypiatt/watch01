@@ -92,7 +92,7 @@ serve(async (req) => {
           ],
         }),
       });
-    } else {
+    } else if (activeModel === 'gpt-4o') {
       console.log('Using GPT-4 model for generation');
       response = await fetch('https://api.openai.com/v1/chat/completions', {
         method: 'POST',
@@ -108,6 +108,8 @@ serve(async (req) => {
           ],
         }),
       });
+    } else {
+      throw new Error(`Unsupported model: ${activeModel}`);
     }
 
     const data = await response.json();
