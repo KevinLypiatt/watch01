@@ -58,11 +58,13 @@ export const EditAIPrompts = () => {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("ai_prompts")
-        .select("ai_model")
-        .distinct();
+        .select("ai_model");
       
       if (error) throw error;
-      return data.map(item => item.ai_model);
+      
+      // Get unique models using Set
+      const uniqueModelsSet = new Set(data.map(item => item.ai_model));
+      return Array.from(uniqueModelsSet);
     },
   });
 
