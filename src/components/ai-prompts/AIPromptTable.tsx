@@ -1,3 +1,5 @@
+
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { AIPrompt } from "@/types/ai-prompt";
 import { Button } from "@/components/ui/button";
 import { Pencil, Trash2 } from "lucide-react";
@@ -27,49 +29,75 @@ export const AIPromptTable = ({
   activeGenerationModel,
 }: AIPromptTableProps) => {
   return (
-    <div className="overflow-hidden rounded-md border">
-      <table className="min-w-full divide-y divide-gray-200">
-        <thead className="bg-gray-50">
-          <tr>
-            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Model</th>
-            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Name</th>
-            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Content</th>
-            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
-          </tr>
-        </thead>
-        <tbody className="bg-white divide-y divide-gray-200">
+    <div className="border rounded-md">
+      <Table>
+        <TableHeader>
+          <TableRow>
+            <TableHead>Model</TableHead>
+            <TableHead>Purpose</TableHead>
+            <TableHead>Name</TableHead>
+            <TableHead>Content</TableHead>
+            <TableHead className="w-[100px]">Actions</TableHead>
+          </TableRow>
+        </TableHeader>
+        <TableBody>
           {prompts.map((prompt) => (
-            <tr key={prompt.id}>
-              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{activeGenerationModel}</td>
-              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{prompt.name}</td>
-              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+            <TableRow key={prompt.id} className="h-24">
+              <TableCell className="align-top">{activeGenerationModel}</TableCell>
+              <TableCell className="align-top">{prompt.purpose}</TableCell>
+              <TableCell className="align-top">{prompt.name}</TableCell>
+              <TableCell className="align-top">
                 {editingId === prompt.id ? (
-                  <Textarea
-                    value={editedContent}
-                    onChange={(e) => onContentChange(e.target.value)}
-                    rows={3}
-                  />
+                  <div className="flex flex-col gap-2">
+                    <Textarea
+                      value={editedContent}
+                      onChange={(e) => onContentChange(e.target.value)}
+                      className="min-h-[120px]"
+                    />
+                    <div className="flex gap-2">
+                      <Button
+                        size="sm"
+                        onClick={() => onSave(prompt.id)}
+                      >
+                        Save
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={onEditCancel}
+                      >
+                        Cancel
+                      </Button>
+                    </div>
+                  </div>
                 ) : (
-                  prompt.content
+                  <div className="whitespace-pre-wrap">{prompt.content}</div>
                 )}
-              </td>
-              <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                {editingId === prompt.id ? (
-                  <>
-                    <Button onClick={() => onSave(prompt.id)}>Save</Button>
-                    <Button onClick={onEditCancel} variant="outline">Cancel</Button>
-                  </>
-                ) : (
-                  <>
-                    <Button onClick={() => onEditClick(prompt)}>Edit</Button>
-                    <Button onClick={() => onDeleteClick(prompt.id)} variant="outline" className="text-red-600">Delete</Button>
-                  </>
-                )}
-              </td>
-            </tr>
+              </TableCell>
+              <TableCell className="align-top">
+                <div className="flex gap-2">
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => onEditClick(prompt)}
+                    disabled={editingId !== null}
+                  >
+                    <Pencil className="h-4 w-4" />
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => onDeleteClick(prompt.id)}
+                    disabled={editingId !== null}
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
+                </div>
+              </TableCell>
+            </TableRow>
           ))}
-        </tbody>
-      </table>
+        </TableBody>
+      </Table>
     </div>
   );
 };

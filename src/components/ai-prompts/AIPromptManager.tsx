@@ -5,16 +5,7 @@ import { useToast } from "@/hooks/use-toast";
 import { AIPromptFilter } from "./AIPromptFilter";
 import { AIPromptTable } from "./AIPromptTable";
 import { DeletePromptDialog } from "./DeletePromptDialog";
-
-interface AIPrompt {
-  id: number;
-  ai_model: string;
-  name: string;
-  content: string;
-  created_at: string;
-  updated_at: string;
-  purpose: string;
-}
+import { AIPrompt } from "@/types/ai-prompt";
 
 interface AIPromptManagerProps {
   activeGenerationModel: string;
@@ -142,7 +133,7 @@ export const AIPromptManager = ({ activeGenerationModel }: AIPromptManagerProps)
   }
 
   return (
-    <>
+    <div className="space-y-6">
       <AIPromptFilter
         selectedModel={selectedModel}
         uniqueModels={uniqueModels}
@@ -150,7 +141,7 @@ export const AIPromptManager = ({ activeGenerationModel }: AIPromptManagerProps)
       />
 
       <AIPromptTable
-        prompts={aiPrompts}
+        prompts={aiPrompts || []}
         editingId={editingId}
         editedContent={editedContent}
         onEditClick={handleEditClick}
@@ -166,6 +157,6 @@ export const AIPromptManager = ({ activeGenerationModel }: AIPromptManagerProps)
         onOpenChange={setDeleteDialogOpen}
         onConfirm={handleDeleteConfirm}
       />
-    </>
+    </div>
   );
 };
