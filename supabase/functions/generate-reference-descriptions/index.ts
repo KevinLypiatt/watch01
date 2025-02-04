@@ -13,6 +13,8 @@ interface AIModelConfig {
   apiEndpoint: string;
   maxTokens: number;
   requiresUserPrompt: boolean;
+  promptFormat: 'single' | 'split';
+  headers: (apiKey: string) => Record<string, string>;
 }
 
 const AI_MODEL_CONFIGS: Record<string, AIModelConfig> = {
@@ -21,12 +23,23 @@ const AI_MODEL_CONFIGS: Record<string, AIModelConfig> = {
     apiEndpoint: 'https://api.anthropic.com/v1/messages',
     maxTokens: 1024,
     requiresUserPrompt: false,
+    promptFormat: 'single',
+    headers: (apiKey: string) => ({
+      'Content-Type': 'application/json',
+      'x-api-key': apiKey,
+      'anthropic-version': '2023-06-01',
+    }),
   },
   'gpt-4o': {
     name: 'gpt-4o',
     apiEndpoint: 'https://api.openai.com/v1/chat/completions',
     maxTokens: 1024,
     requiresUserPrompt: true,
+    promptFormat: 'split',
+    headers: (apiKey: string) => ({
+      'Authorization': `Bearer ${apiKey}`,
+      'Content-Type': 'application/json',
+    }),
   },
 };
 
@@ -51,6 +64,13 @@ serve(async (req) => {
     }
 
     const modelConfig = AI_MODEL_CONFIGS[activeModel];
+    const apiKey = activeModel === 'claude-3-opus-20240229' 
+      ? Deno.env.get('ANTHROPIC_API_KEY')
+      : Deno.env.get('OPENAI_API_KEY');
+
+    if (!apiKey) {
+      throw new Error(`API key not found for model: ${activeModel}`);
+    }
     
     // Get prompts based on active model
     const { data: prompts, error: promptsError } = await supabaseClient
@@ -63,114 +83,70 @@ serve(async (req) => {
       throw new Error(`Error fetching prompts: ${promptsError.message}`);
     }
 
-    if (!prompts || prompts.length === 0) {
+    const systemPrompt = prompts?.find(p => p.name === 'System Prompt')?.content;
+    const styleGuide = prompts?.find(p => p.name === 'Style Guide')?.content;
+    const userPrompt = modelConfig.requiresUserPrompt ? 
+      prompts?.find(p => p.name === 'User Prompt')?.content : 
+      undefined;
+
+    if (!systemPrompt || !styleGuide || (modelConfig.requiresUserPrompt && !userPrompt)) {
       throw new Error('Required prompts not found in the database');
     }
 
-    const systemPrompt = prompts.find(p => p.name === 'System Prompt')?.content;
-    const styleGuide = prompts.find(p => p.name === 'Style Guide')?.content;
-    const userPrompt = modelConfig.requiresUserPrompt ? 
-      prompts.find(p => p.name === 'User Prompt')?.content : 
-      null;
-
-    if (!systemPrompt || !styleGuide || (modelConfig.requiresUserPrompt && !userPrompt)) {
-      throw new Error('Missing required prompts in the database');
-    }
-
-    // Function to generate description using Claude
-    async function generateWithClaude(reference: any) {
-      console.log('Generating description with Claude for reference:', reference);
-
-      const prompt = `${systemPrompt}
-
-Style Guide:
-${styleGuide}
-
-Brand: ${reference.brand}
-Reference Name: ${reference.reference_name}`;
-      
-      console.log('Sending prompt to Claude:', prompt);
-
-      const apiKey = Deno.env.get('ANTHROPIC_API_KEY');
-      if (!apiKey) throw new Error('ANTHROPIC_API_KEY not found');
-
-      const response = await fetch(modelConfig.apiEndpoint, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'x-api-key': apiKey,
-          'anthropic-version': '2023-06-01',
-        },
-        body: JSON.stringify({
-          model: activeModel,
-          max_tokens: modelConfig.maxTokens,
-          messages: [
-            {
-              role: 'user',
-              content: prompt,
-            },
-          ],
-        }),
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        console.error('Claude API error:', errorData);
-        throw new Error(`Claude API error: ${JSON.stringify(errorData)}`);
-      }
-
-      const data = await response.json();
-      return data.content[0].text;
-    }
-
-    // Function to generate description using GPT
-    async function generateWithGPT(reference: any) {
-      console.log('Generating description with GPT for reference:', reference);
-
-      const systemMessage = `${systemPrompt}\n\nStyle Guide:\n${styleGuide}`;
-      const userMessage = `${userPrompt}\n\nBrand: ${reference.brand}\nReference Name: ${reference.reference_name}`;
-
-      console.log('System message:', systemMessage);
-      console.log('User message:', userMessage);
-
-      const apiKey = Deno.env.get('OPENAI_API_KEY');
-      if (!apiKey) throw new Error('OPENAI_API_KEY not found');
-
-      const response = await fetch(modelConfig.apiEndpoint, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${apiKey}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          model: activeModel,
-          messages: [
-            { role: 'system', content: systemMessage },
-            { role: 'user', content: userMessage }
-          ],
-          max_tokens: modelConfig.maxTokens,
-        }),
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        console.error('GPT API error:', errorData);
-        throw new Error(`GPT API error: ${JSON.stringify(errorData)}`);
-      }
-
-      const data = await response.json();
-      return data.choices[0].message.content;
-    }
-
-    // Function to generate description based on active model
     async function generateDescription(reference: any) {
       console.log('Generating description for reference:', reference);
-      
-      const description = activeModel === 'claude-3-opus-20240229' ?
-        await generateWithClaude(reference) :
-        await generateWithGPT(reference);
 
-      // Only update the database if we have a reference ID
+      const prompt = modelConfig.promptFormat === 'single'
+        ? `${systemPrompt}\n\nStyle Guide:\n${styleGuide}\n\nBrand: ${reference.brand}\nReference Name: ${reference.reference_name}`
+        : [
+            { 
+              role: 'system', 
+              content: `${systemPrompt}\n\nStyle Guide:\n${styleGuide}` 
+            },
+            {
+              role: 'user',
+              content: `${userPrompt}\n\nBrand: ${reference.brand}\nReference Name: ${reference.reference_name}`
+            }
+          ];
+
+      console.log('Sending request to AI service:', {
+        endpoint: modelConfig.apiEndpoint,
+        model: activeModel,
+        promptFormat: modelConfig.promptFormat,
+      });
+
+      const response = await fetch(modelConfig.apiEndpoint, {
+        method: 'POST',
+        headers: modelConfig.headers(apiKey),
+        body: JSON.stringify(
+          modelConfig.promptFormat === 'single'
+            ? {
+                model: activeModel,
+                max_tokens: modelConfig.maxTokens,
+                messages: [{ role: 'user', content: prompt as string }],
+              }
+            : {
+                model: activeModel,
+                max_tokens: modelConfig.maxTokens,
+                messages: prompt,
+              }
+        ),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        console.error('AI API error:', errorData);
+        throw new Error(`AI API error: ${JSON.stringify(errorData)}`);
+      }
+
+      const data = await response.json();
+      console.log('AI response received:', data);
+      
+      const description = modelConfig.name === 'claude-3-opus-20240229'
+        ? data.content[0].text
+        : data.choices[0].message.content;
+
+      // Update database if reference ID exists
       if (reference.reference_id) {
         const { error: updateError } = await supabaseClient
           .from('reference_descriptions')
@@ -184,7 +160,6 @@ Reference Name: ${reference.reference_name}`;
     }
 
     if (generateAll) {
-      // Get all references without descriptions
       const { data: references, error } = await supabaseClient
         .from('reference_descriptions')
         .select('*')
@@ -193,7 +168,6 @@ Reference Name: ${reference.reference_name}`;
       if (error) throw error;
       console.log(`Found ${references?.length} references without descriptions`);
 
-      // Generate descriptions for all references
       for (const reference of references || []) {
         await generateDescription(reference);
       }
@@ -203,7 +177,6 @@ Reference Name: ${reference.reference_name}`;
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     } else if (referenceId) {
-      // Generate description for an existing reference
       const { data: reference } = await supabaseClient
         .from('reference_descriptions')
         .select('*')
@@ -219,7 +192,6 @@ Reference Name: ${reference.reference_name}`;
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     } else if (brand && reference_name) {
-      // Generate description for a new reference
       const description = await generateDescription({ brand, reference_name });
       
       return new Response(
