@@ -1,15 +1,13 @@
 
 import { Home } from "lucide-react";
 import { Link } from "react-router-dom";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 interface PageHeaderWithModelProps {
   activeModel?: string;
-  onModelChange?: (value: string) => void;
   title?: string;
 }
 
-export const PageHeaderWithModel = ({ activeModel, onModelChange, title }: PageHeaderWithModelProps) => {
+export const PageHeaderWithModel = ({ activeModel, title }: PageHeaderWithModelProps) => {
   return (
     <header className="fixed top-0 left-0 right-0 z-50 bg-white/80 backdrop-blur-lg border-b border-gray-100">
       <div className="max-w-7xl mx-auto px-6 py-4 flex justify-between items-center">
@@ -22,19 +20,7 @@ export const PageHeaderWithModel = ({ activeModel, onModelChange, title }: PageH
         {activeModel && (
           <div className="flex items-center gap-2">
             <span className="text-sm text-gray-600">Active Model:</span>
-            {onModelChange ? (
-              <Select value={activeModel} onValueChange={onModelChange}>
-                <SelectTrigger className="w-[200px]">
-                  <SelectValue placeholder="Select model" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="claude-3-opus-20240229">Claude 3 Opus</SelectItem>
-                  <SelectItem value="gpt-4o">GPT-4 Opus</SelectItem>
-                </SelectContent>
-              </Select>
-            ) : (
-              <span className="font-semibold">{activeModel}</span>
-            )}
+            <span className="font-mono text-sm">{activeModel}</span>
           </div>
         )}
       </div>

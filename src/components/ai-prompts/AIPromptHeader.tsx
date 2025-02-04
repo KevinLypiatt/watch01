@@ -1,3 +1,4 @@
+
 import { Link } from "react-router-dom";
 import { Home } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -36,18 +37,18 @@ export const AIPromptHeader = ({
       <div className="flex items-center gap-4">
         <div className="flex flex-col">
           <label htmlFor="generationModel" className="text-sm font-medium mb-1">
-            Active Generation Model
+            Change Active Model
           </label>
           <Select
             value={activeGenerationModel}
             onValueChange={setActiveGenerationModel}
           >
-            <SelectTrigger className="w-[300px]">
+            <SelectTrigger className="w-[300px] font-mono">
               <SelectValue placeholder="Select model" />
             </SelectTrigger>
             <SelectContent>
               {availableGenerationModels.map((model) => (
-                <SelectItem key={model} value={model}>
+                <SelectItem key={model} value={model} className="font-mono">
                   {model}
                 </SelectItem>
               ))}
