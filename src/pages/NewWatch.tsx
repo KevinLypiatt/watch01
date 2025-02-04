@@ -22,7 +22,10 @@ const NewWatch = () => {
   const generateDescriptionMutation = useMutation({
     mutationFn: async (watchData: any) => {
       const response = await supabase.functions.invoke('generate-watch-description', {
-        body: { watchData },
+        body: { 
+          watchData,
+          activeModel: activeGenerationModel // Add this line
+        },
       });
       
       if (response.error) throw response.error;
@@ -40,6 +43,7 @@ const NewWatch = () => {
       setIsGenerating(false);
     },
     onError: (error) => {
+      console.error('Generation error:', error); // Add error logging
       toast({
         title: "Error",
         description: "Failed to generate description",
@@ -85,7 +89,11 @@ const NewWatch = () => {
 
   return (
     <div>
-      <PageHeaderWithModel activeModel={activeGenerationModel} title="New Watch" />
+      <PageHeaderWithModel 
+        activeModel={activeGenerationModel} 
+        onModelChange={setActiveGenerationModel} 
+        title="New Watch" 
+      />
       <div className="container mx-auto py-20">
         <Button
           variant="ghost"
