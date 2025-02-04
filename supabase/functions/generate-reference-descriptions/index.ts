@@ -8,6 +8,28 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
+interface AIModelConfig {
+  name: string;
+  apiEndpoint: string;
+  maxTokens: number;
+  requiresUserPrompt: boolean;
+}
+
+const AI_MODEL_CONFIGS: Record<string, AIModelConfig> = {
+  'claude-3-opus-20240229': {
+    name: 'claude-3-opus-20240229',
+    apiEndpoint: 'https://api.anthropic.com/v1/messages',
+    maxTokens: 1024,
+    requiresUserPrompt: false,
+  },
+  'gpt-4o': {
+    name: 'gpt-4o',
+    apiEndpoint: 'https://api.openai.com/v1/chat/completions',
+    maxTokens: 1024,
+    requiresUserPrompt: true,
+  },
+};
+
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
@@ -23,6 +45,12 @@ serve(async (req) => {
 
     const { referenceId, generateAll, brand, reference_name, activeModel } = await req.json();
     console.log('Active model:', activeModel);
+
+    if (!activeModel || !(activeModel in AI_MODEL_CONFIGS)) {
+      throw new Error(`Unsupported AI model: ${activeModel}`);
+    }
+
+    const modelConfig = AI_MODEL_CONFIGS[activeModel];
     
     // Get prompts based on active model
     const { data: prompts, error: promptsError } = await supabaseClient
@@ -41,11 +69,11 @@ serve(async (req) => {
 
     const systemPrompt = prompts.find(p => p.name === 'System Prompt')?.content;
     const styleGuide = prompts.find(p => p.name === 'Style Guide')?.content;
-    const userPrompt = activeModel.startsWith('gpt') ? 
+    const userPrompt = modelConfig.requiresUserPrompt ? 
       prompts.find(p => p.name === 'User Prompt')?.content : 
       null;
 
-    if (!systemPrompt || !styleGuide || (activeModel.startsWith('gpt') && !userPrompt)) {
+    if (!systemPrompt || !styleGuide || (modelConfig.requiresUserPrompt && !userPrompt)) {
       throw new Error('Missing required prompts in the database');
     }
 
@@ -63,16 +91,19 @@ Reference Name: ${reference.reference_name}`;
       
       console.log('Sending prompt to Claude:', prompt);
 
-      const response = await fetch('https://api.anthropic.com/v1/messages', {
+      const apiKey = Deno.env.get('ANTHROPIC_API_KEY');
+      if (!apiKey) throw new Error('ANTHROPIC_API_KEY not found');
+
+      const response = await fetch(modelConfig.apiEndpoint, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'x-api-key': Deno.env.get('ANTHROPIC_API_KEY') || '',
+          'x-api-key': apiKey,
           'anthropic-version': '2023-06-01',
         },
         body: JSON.stringify({
-          model: 'claude-3-opus-20240229',
-          max_tokens: 1024,
+          model: activeModel,
+          max_tokens: modelConfig.maxTokens,
           messages: [
             {
               role: 'user',
@@ -82,11 +113,13 @@ Reference Name: ${reference.reference_name}`;
         }),
       });
 
-      const data = await response.json();
       if (!response.ok) {
-        console.error('Claude API error:', data);
-        throw new Error(`Claude API error: ${data.error?.message || 'Unknown error'}`);
+        const errorData = await response.json();
+        console.error('Claude API error:', errorData);
+        throw new Error(`Claude API error: ${JSON.stringify(errorData)}`);
       }
+
+      const data = await response.json();
       return data.content[0].text;
     }
 
@@ -100,10 +133,13 @@ Reference Name: ${reference.reference_name}`;
       console.log('System message:', systemMessage);
       console.log('User message:', userMessage);
 
-      const response = await fetch('https://api.openai.com/v1/chat/completions', {
+      const apiKey = Deno.env.get('OPENAI_API_KEY');
+      if (!apiKey) throw new Error('OPENAI_API_KEY not found');
+
+      const response = await fetch(modelConfig.apiEndpoint, {
         method: 'POST',
         headers: {
-          'Authorization': `Bearer ${Deno.env.get('OPENAI_API_KEY')}`,
+          'Authorization': `Bearer ${apiKey}`,
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
@@ -112,14 +148,17 @@ Reference Name: ${reference.reference_name}`;
             { role: 'system', content: systemMessage },
             { role: 'user', content: userMessage }
           ],
+          max_tokens: modelConfig.maxTokens,
         }),
       });
 
-      const data = await response.json();
       if (!response.ok) {
-        console.error('GPT API error:', data);
-        throw new Error(`GPT API error: ${data.error?.message || 'Unknown error'}`);
+        const errorData = await response.json();
+        console.error('GPT API error:', errorData);
+        throw new Error(`GPT API error: ${JSON.stringify(errorData)}`);
       }
+
+      const data = await response.json();
       return data.choices[0].message.content;
     }
 

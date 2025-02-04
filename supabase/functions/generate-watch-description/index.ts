@@ -1,3 +1,4 @@
+
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.7.1';
@@ -5,6 +6,28 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.7.1';
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+};
+
+interface AIModelConfig {
+  name: string;
+  apiEndpoint: string;
+  maxTokens: number;
+  requiresUserPrompt: boolean;
+}
+
+const AI_MODEL_CONFIGS: Record<string, AIModelConfig> = {
+  'claude-3-opus-20240229': {
+    name: 'claude-3-opus-20240229',
+    apiEndpoint: 'https://api.anthropic.com/v1/messages',
+    maxTokens: 1024,
+    requiresUserPrompt: false,
+  },
+  'gpt-4o': {
+    name: 'gpt-4o',
+    apiEndpoint: 'https://api.openai.com/v1/chat/completions',
+    maxTokens: 1024,
+    requiresUserPrompt: true,
+  },
 };
 
 serve(async (req) => {
@@ -26,6 +49,12 @@ serve(async (req) => {
     console.log('Watch data received:', JSON.stringify(watchData, null, 2));
     console.log('Active model:', activeModel);
 
+    if (!activeModel || !(activeModel in AI_MODEL_CONFIGS)) {
+      throw new Error(`Unsupported AI model: ${activeModel}`);
+    }
+
+    const modelConfig = AI_MODEL_CONFIGS[activeModel];
+
     // Get the system prompt and guide for watch descriptions
     console.log('Fetching prompts from ai_prompts table...');
     const { data: prompts, error: promptsError } = await supabaseClient
@@ -43,11 +72,10 @@ serve(async (req) => {
 
     const systemPrompt = prompts?.find(p => p.name === 'System Prompt')?.content || '';
     const styleGuide = prompts?.find(p => p.name === 'Style Guide')?.content || '';
+    const userPrompt = modelConfig.requiresUserPrompt ? 
+      prompts?.find(p => p.name === 'User Prompt')?.content || '' : '';
     
-    console.log('System prompt found:', systemPrompt);
-    console.log('Style guide found:', styleGuide);
-
-    if (!systemPrompt || !styleGuide) {
+    if (!systemPrompt || !styleGuide || (modelConfig.requiresUserPrompt && !userPrompt)) {
       throw new Error('Required prompts not found in ai_prompts table');
     }
 
@@ -64,26 +92,28 @@ serve(async (req) => {
       console.error('Error fetching reference description:', referenceError);
       throw referenceError;
     }
-    
-    console.log('Reference description found:', referenceDesc?.reference_description || 'No reference found');
-
-    const prompt = `${systemPrompt}\n\nStyle Guide:\n${styleGuide}\n\nReference Description:\n${referenceDesc?.reference_description || ''}\n\nWatch Details:\n${JSON.stringify(watchData, null, 2)}`;
-    
-    console.log('Final prompt being sent to AI model:', prompt);
 
     let response;
+    let apiKey;
+
     if (activeModel === 'claude-3-opus-20240229') {
-      console.log('Using Claude model for generation');
-      response = await fetch('https://api.anthropic.com/v1/messages', {
+      apiKey = Deno.env.get('ANTHROPIC_API_KEY');
+      if (!apiKey) throw new Error('ANTHROPIC_API_KEY not found');
+
+      const prompt = `${systemPrompt}\n\nStyle Guide:\n${styleGuide}\n\nReference Description:\n${referenceDesc?.reference_description || ''}\n\nWatch Details:\n${JSON.stringify(watchData, null, 2)}`;
+      
+      console.log('Sending prompt to Claude:', prompt);
+
+      response = await fetch(modelConfig.apiEndpoint, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'x-api-key': Deno.env.get('ANTHROPIC_API_KEY') || '',
+          'x-api-key': apiKey,
           'anthropic-version': '2023-06-01',
         },
         body: JSON.stringify({
           model: activeModel,
-          max_tokens: 1024,
+          max_tokens: modelConfig.maxTokens,
           messages: [
             {
               role: 'user',
@@ -92,24 +122,41 @@ serve(async (req) => {
           ],
         }),
       });
-    } else if (activeModel === 'gpt-4o') {
-      console.log('Using GPT-4 model for generation');
-      response = await fetch('https://api.openai.com/v1/chat/completions', {
+    } else {
+      apiKey = Deno.env.get('OPENAI_API_KEY');
+      if (!apiKey) throw new Error('OPENAI_API_KEY not found');
+
+      const messages = [
+        { 
+          role: 'system', 
+          content: `${systemPrompt}\n\nStyle Guide:\n${styleGuide}` 
+        },
+        {
+          role: 'user',
+          content: `${userPrompt}\n\nReference Description:\n${referenceDesc?.reference_description || ''}\n\nWatch Details:\n${JSON.stringify(watchData, null, 2)}`
+        }
+      ];
+
+      console.log('Sending messages to GPT:', messages);
+
+      response = await fetch(modelConfig.apiEndpoint, {
         method: 'POST',
         headers: {
-          'Authorization': `Bearer ${Deno.env.get('OPENAI_API_KEY')}`,
+          'Authorization': `Bearer ${apiKey}`,
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          model: 'gpt-4o',
-          messages: [
-            { role: 'system', content: 'You are a helpful assistant that generates watch descriptions.' },
-            { role: 'user', content: prompt }
-          ],
+          model: activeModel,
+          messages,
+          max_tokens: modelConfig.maxTokens,
         }),
       });
-    } else {
-      throw new Error(`Unsupported model: ${activeModel}`);
+    }
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      console.error('API error:', errorData);
+      throw new Error(`API error: ${JSON.stringify(errorData)}`);
     }
 
     const data = await response.json();
