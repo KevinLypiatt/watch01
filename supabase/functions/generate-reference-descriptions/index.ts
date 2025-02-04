@@ -2,22 +2,11 @@
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.7.1';
+import { corsHeaders, GenerateDescriptionRequest, ReferenceData } from './types.ts';
+import { getAIPrompts, generateWithAI } from './ai-service.ts';
+import { getReferencesWithoutDescriptions, getReferenceById, updateReferenceDescription } from './db-service.ts';
 
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-};
-
-interface AIModelConfig {
-  name: string;
-  apiEndpoint: string;
-  maxTokens: number;
-  requiresUserPrompt: boolean;
-  promptFormat: 'single' | 'split';
-  headers: (apiKey: string) => Record<string, string>;
-}
-
-const AI_MODEL_CONFIGS: Record<string, AIModelConfig> = {
+const AI_MODEL_CONFIGS: Record<string, any> = {
   'claude-3-opus-20240229': {
     name: 'claude-3-opus-20240229',
     apiEndpoint: 'https://api.anthropic.com/v1/messages',
@@ -56,7 +45,9 @@ serve(async (req) => {
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     );
 
-    const { referenceId, generateAll, brand, reference_name, activeModel } = await req.json();
+    const request: GenerateDescriptionRequest = await req.json();
+    const { referenceId, generateAll, brand, reference_name, activeModel } = request;
+    
     console.log('Active model:', activeModel);
 
     if (!activeModel || !(activeModel in AI_MODEL_CONFIGS)) {
@@ -71,18 +62,9 @@ serve(async (req) => {
     if (!apiKey) {
       throw new Error(`API key not found for model: ${activeModel}`);
     }
+
+    const prompts = await getAIPrompts(supabaseClient, activeModel);
     
-    // Get prompts based on active model
-    const { data: prompts, error: promptsError } = await supabaseClient
-      .from('ai_prompts')
-      .select('*')
-      .eq('purpose', 'reference')
-      .eq('ai_model', activeModel);
-
-    if (promptsError) {
-      throw new Error(`Error fetching prompts: ${promptsError.message}`);
-    }
-
     const systemPrompt = prompts?.find(p => p.name === 'System Prompt')?.content;
     const styleGuide = prompts?.find(p => p.name === 'Style Guide')?.content;
     const userPrompt = modelConfig.requiresUserPrompt ? 
@@ -93,79 +75,27 @@ serve(async (req) => {
       throw new Error('Required prompts not found in the database');
     }
 
-    async function generateDescription(reference: any) {
+    async function generateDescription(reference: ReferenceData) {
       console.log('Generating description for reference:', reference);
-
-      const prompt = modelConfig.promptFormat === 'single'
-        ? `${systemPrompt}\n\nStyle Guide:\n${styleGuide}\n\nBrand: ${reference.brand}\nReference Name: ${reference.reference_name}`
-        : [
-            { 
-              role: 'system', 
-              content: `${systemPrompt}\n\nStyle Guide:\n${styleGuide}` 
-            },
-            {
-              role: 'user',
-              content: `${userPrompt}\n\nBrand: ${reference.brand}\nReference Name: ${reference.reference_name}`
-            }
-          ];
-
-      console.log('Sending request to AI service:', {
-        endpoint: modelConfig.apiEndpoint,
-        model: activeModel,
-        promptFormat: modelConfig.promptFormat,
-      });
-
-      const response = await fetch(modelConfig.apiEndpoint, {
-        method: 'POST',
-        headers: modelConfig.headers(apiKey),
-        body: JSON.stringify(
-          modelConfig.promptFormat === 'single'
-            ? {
-                model: activeModel,
-                max_tokens: modelConfig.maxTokens,
-                messages: [{ role: 'user', content: prompt as string }],
-              }
-            : {
-                model: activeModel,
-                max_tokens: modelConfig.maxTokens,
-                messages: prompt,
-              }
-        ),
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        console.error('AI API error:', errorData);
-        throw new Error(`AI API error: ${JSON.stringify(errorData)}`);
-      }
-
-      const data = await response.json();
-      console.log('AI response received:', data);
       
-      const description = modelConfig.name === 'claude-3-opus-20240229'
-        ? data.content[0].text
-        : data.choices[0].message.content;
+      const description = await generateWithAI(
+        modelConfig,
+        apiKey,
+        systemPrompt,
+        styleGuide,
+        userPrompt,
+        reference
+      );
 
-      // Update database if reference ID exists
       if (reference.reference_id) {
-        const { error: updateError } = await supabaseClient
-          .from('reference_descriptions')
-          .update({ reference_description: description })
-          .eq('reference_id', reference.reference_id);
-
-        if (updateError) throw updateError;
+        await updateReferenceDescription(supabaseClient, reference.reference_id, description);
       }
       
       return description;
     }
 
     if (generateAll) {
-      const { data: references, error } = await supabaseClient
-        .from('reference_descriptions')
-        .select('*')
-        .is('reference_description', null);
-
-      if (error) throw error;
+      const references = await getReferencesWithoutDescriptions(supabaseClient);
       console.log(`Found ${references?.length} references without descriptions`);
 
       for (const reference of references || []) {
@@ -177,12 +107,7 @@ serve(async (req) => {
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     } else if (referenceId) {
-      const { data: reference } = await supabaseClient
-        .from('reference_descriptions')
-        .select('*')
-        .eq('reference_id', referenceId)
-        .single();
-
+      const reference = await getReferenceById(supabaseClient, referenceId);
       if (!reference) throw new Error('Reference not found');
 
       const description = await generateDescription(reference);
