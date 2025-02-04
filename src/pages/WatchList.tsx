@@ -42,7 +42,7 @@ const WatchList = () => {
         query = query.ilike('model_reference', `%${activeFilters.model}%`);
       }
       if (activeFilters.search) {
-        query = query.or(`brand.ilike.%${activeFilters.search}%,model_name.ilike.%${activeFilters.search}%,model_reference.ilike.%${activeFilters.search}%,description.ilike.%${activeFilters.search}%`);
+        query = query.or(`brand.ilike.%${activeFilters.search}%,model_name.ilike.%${activeFilters.search}%,model_reference.ilike.%${activeFilters.search}%,description.ilike.%${activeFilters.search}%,listing_reference.ilike.%${activeFilters.search}%`);
       }
       
       const { data, error } = await query;
