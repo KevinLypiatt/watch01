@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { PageHeaderWithModel } from "@/components/shared/PageHeaderWithModel";
@@ -134,7 +133,6 @@ const EditReferenceDescription = () => {
     <div className="min-h-screen bg-gray-50">
       <PageHeaderWithModel 
         activeModel={activeGenerationModel}
-        onModelChange={setActiveGenerationModel}
         title="Edit Reference Description"
       />
       <div className="container mx-auto pt-24 pb-12">

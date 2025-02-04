@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { PageHeaderWithModel } from "@/components/shared/PageHeaderWithModel";
 import { ReferenceDescriptionHeader } from "@/components/reference-descriptions/ReferenceDescriptionHeader";
@@ -61,7 +60,6 @@ const ReferenceDescriptions = () => {
     <div className="container mx-auto py-8">
       <PageHeaderWithModel 
         activeModel={activeGenerationModel}
-        onModelChange={setActiveGenerationModel}
         title="Reference Descriptions" 
       />
       <div className="pt-16">

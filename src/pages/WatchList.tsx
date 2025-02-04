@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { PageHeaderWithModel } from "@/components/shared/PageHeaderWithModel";
 import { WatchListHeader } from "@/components/watch-list/WatchListHeader";
@@ -58,7 +57,6 @@ const WatchList = () => {
     <div className="container mx-auto py-8">
       <PageHeaderWithModel 
         activeModel={activeGenerationModel}
-        onModelChange={setActiveGenerationModel}
         title="Watch List" 
       />
       <div className="pt-16">
