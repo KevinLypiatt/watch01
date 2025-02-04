@@ -1,9 +1,11 @@
+
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { WatchFormFields } from "./WatchFormFields";
 import { WatchDescriptionSection } from "./WatchDescriptionSection";
+import { Copy } from "lucide-react";
 
 interface WatchFormProps {
   formData: any;
@@ -69,6 +71,22 @@ export const WatchForm = ({
     }
   };
 
+  const handleCopyDescription = () => {
+    if (formData.description) {
+      navigator.clipboard.writeText(formData.description);
+      toast({
+        title: "Success",
+        description: "Description copied to clipboard",
+      });
+    } else {
+      toast({
+        title: "Warning",
+        description: "No description to copy",
+        variant: "destructive",
+      });
+    }
+  };
+
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
       <WatchFormFields 
@@ -83,9 +101,20 @@ export const WatchForm = ({
         isGenerating={isGenerating}
       />
 
-      <Button type="submit" variant="outline" className="bg-[#f3f3f3] hover:bg-[#e5e5e5]">
-        Save Watch
-      </Button>
+      <div className="flex gap-4">
+        <Button type="submit" variant="outline" className="bg-[#f3f3f3] hover:bg-[#e5e5e5]">
+          Save Watch
+        </Button>
+        <Button 
+          type="button" 
+          variant="outline" 
+          className="bg-[#f3f3f3] hover:bg-[#e5e5e5]"
+          onClick={handleCopyDescription}
+        >
+          <Copy className="mr-2 h-4 w-4" />
+          Copy Description
+        </Button>
+      </div>
     </form>
   );
 };
