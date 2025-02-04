@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { useMutation } from "@tanstack/react-query";
@@ -6,12 +7,17 @@ import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { WatchForm } from "@/components/watch/WatchForm";
 import { PageHeaderWithModel } from "@/components/shared/PageHeaderWithModel";
+import { ArrowLeft } from "lucide-react";
 
 const NewWatch = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const [formData, setFormData] = useState<any>({});
   const [isGenerating, setIsGenerating] = useState(false);
+  const [activeGenerationModel, setActiveGenerationModel] = useState<string>(() => {
+    const saved = localStorage.getItem("activeGenerationModel");
+    return saved || "claude-3-opus-20240229";
+  });
 
   const generateDescriptionMutation = useMutation({
     mutationFn: async (watchData: any) => {
@@ -79,13 +85,16 @@ const NewWatch = () => {
 
   return (
     <div>
-      <PageHeaderWithModel title="New Watch" />
+      <PageHeaderWithModel activeModel={activeGenerationModel} title="New Watch" />
       <div className="container mx-auto py-20">
-        <div className="mb-6">
-          <Link to="/watch-list" className="text-primary hover:underline">
-            To Watch List
-          </Link>
-        </div>
+        <Button
+          variant="ghost"
+          onClick={() => navigate("/watch-list")}
+          className="mb-6"
+        >
+          <ArrowLeft className="mr-2" />
+          Back to Watch List
+        </Button>
         
         <WatchForm 
           formData={formData}

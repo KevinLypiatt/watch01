@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { useMutation } from "@tanstack/react-query";
@@ -6,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { ReferenceDescriptionForm } from "@/components/reference-descriptions/ReferenceDescriptionForm";
 import { PageHeaderWithModel } from "@/components/shared/PageHeaderWithModel";
+import { ArrowLeft } from "lucide-react";
 
 const NewReferenceDescription = () => {
   const navigate = useNavigate();
@@ -14,6 +16,10 @@ const NewReferenceDescription = () => {
   const [referenceName, setReferenceName] = useState("");
   const [description, setDescription] = useState("");
   const [isGenerating, setIsGenerating] = useState(false);
+  const [activeGenerationModel, setActiveGenerationModel] = useState<string>(() => {
+    const saved = localStorage.getItem("activeGenerationModel");
+    return saved || "claude-3-opus-20240229";
+  });
 
   const createMutation = useMutation({
     mutationFn: async () => {
@@ -100,13 +106,16 @@ const NewReferenceDescription = () => {
 
   return (
     <div>
-      <PageHeaderWithModel title="New Reference Description" />
+      <PageHeaderWithModel activeModel={activeGenerationModel} title="New Reference Description" />
       <div className="container mx-auto py-20">
-        <div className="mb-6">
-          <Link to="/reference-descriptions" className="text-primary hover:underline">
-            To Reference List
-          </Link>
-        </div>
+        <Button
+          variant="ghost"
+          onClick={() => navigate("/reference-descriptions")}
+          className="mb-6"
+        >
+          <ArrowLeft className="mr-2" />
+          Back to References
+        </Button>
         <ReferenceDescriptionForm
           brand={brand}
           referenceName={referenceName}
