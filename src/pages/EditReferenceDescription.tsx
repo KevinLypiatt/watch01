@@ -5,12 +5,18 @@ import { ReferenceDescriptionForm } from "@/components/reference-descriptions/Re
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
+import { Button } from "@/components/ui/button";
+import { ArrowLeft } from "lucide-react";
 
 const EditReferenceDescription = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const { toast } = useToast();
   const [isGenerating, setIsGenerating] = useState(false);
+  const [activeGenerationModel, setActiveGenerationModel] = useState<string>(() => {
+    const saved = localStorage.getItem("activeGenerationModel");
+    return saved || "claude-3-opus-20240229";
+  });
 
   const [brand, setBrand] = useState("");
   const [referenceName, setReferenceName] = useState("");
@@ -120,8 +126,16 @@ const EditReferenceDescription = () => {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <PageHeaderWithModel title="Edit Reference Description" />
+      <PageHeaderWithModel activeModel={activeGenerationModel} title="Edit Reference Description" />
       <div className="container mx-auto pt-24 pb-12">
+        <Button
+          variant="ghost"
+          onClick={() => navigate("/reference-descriptions")}
+          className="mb-6"
+        >
+          <ArrowLeft className="mr-2" />
+          Back to References
+        </Button>
         <ReferenceDescriptionForm
           id={id}
           brand={brand}
