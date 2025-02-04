@@ -1,10 +1,11 @@
 
 import { Home } from "lucide-react";
 import { Link } from "react-router-dom";
+import { Dispatch, SetStateAction } from "react";
 
 interface PageHeaderWithModelProps {
   activeModel?: string;
-  onModelChange?: (model: string) => void;
+  onModelChange?: Dispatch<SetStateAction<string>>;
   title?: string;
 }
 
