@@ -1,6 +1,6 @@
 
 import { useState } from "react";
-import { useNavigate, Link } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { useMutation } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -67,9 +67,9 @@ const NewReferenceDescription = () => {
     mutationFn: async () => {
       const { data, error } = await supabase.functions.invoke('generate-reference-descriptions', {
         body: { 
-          referenceId: null,
           brand,
-          reference_name: referenceName
+          reference_name: referenceName,
+          activeModel: activeGenerationModel
         }
       });
       if (error) throw error;
@@ -106,7 +106,10 @@ const NewReferenceDescription = () => {
 
   return (
     <div>
-      <PageHeaderWithModel activeModel={activeGenerationModel} title="New Reference Description" />
+      <PageHeaderWithModel 
+        activeModel={activeGenerationModel} 
+        title="New Reference Description" 
+      />
       <div className="container mx-auto py-20">
         <Button
           variant="ghost"
