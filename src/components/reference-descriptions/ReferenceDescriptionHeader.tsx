@@ -28,11 +28,11 @@ export const ReferenceDescriptionHeader = ({
         </Link>
         <Button
           variant="outline"
-          onClick={handleGenerateAll}
-          disabled={isGenerating}
-          className="bg-[#f3f3f3] hover:bg-[#e5e5e5]"
+          disabled={true}
+          className="bg-[#f3f3f3] hover:bg-[#e5e5e5] cursor-not-allowed opacity-50"
+          title="This feature is temporarily disabled"
         >
-          {isGenerating ? "Generating..." : "Generate All Descriptions"}
+          Generate All Descriptions
         </Button>
       </div>
     </div>
