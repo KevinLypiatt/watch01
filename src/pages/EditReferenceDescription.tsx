@@ -1,4 +1,5 @@
-import { useState } from "react";
+
+import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { PageHeaderWithModel } from "@/components/shared/PageHeaderWithModel";
 import { ReferenceDescriptionForm } from "@/components/reference-descriptions/ReferenceDescriptionForm";
@@ -17,6 +18,10 @@ const EditReferenceDescription = () => {
     const saved = localStorage.getItem("activeGenerationModel");
     return saved || "claude-3-opus-20240229";
   });
+
+  useEffect(() => {
+    localStorage.setItem("activeGenerationModel", activeGenerationModel);
+  }, [activeGenerationModel]);
 
   const [brand, setBrand] = useState("");
   const [referenceName, setReferenceName] = useState("");
@@ -126,7 +131,10 @@ const EditReferenceDescription = () => {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <PageHeaderWithModel activeModel={activeGenerationModel} title="Edit Reference Description" />
+      <PageHeaderWithModel 
+        activeModel={activeGenerationModel} 
+        title="Edit Reference Description"
+      />
       <div className="container mx-auto pt-24 pb-12">
         <Button
           variant="ghost"
