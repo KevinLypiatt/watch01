@@ -26,7 +26,6 @@ export const AIPromptTable = ({
   onSave,
   onEditCancel,
   onContentChange,
-  activeGenerationModel,
 }: AIPromptTableProps) => {
   return (
     <div className="border rounded-md">
@@ -43,7 +42,7 @@ export const AIPromptTable = ({
         <TableBody>
           {prompts.map((prompt) => (
             <TableRow key={prompt.id} className="h-24">
-              <TableCell className="align-top">{activeGenerationModel}</TableCell>
+              <TableCell className="align-top">{prompt.ai_model}</TableCell>
               <TableCell className="align-top">{prompt.purpose}</TableCell>
               <TableCell className="align-top">{prompt.name}</TableCell>
               <TableCell className="align-top">

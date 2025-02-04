@@ -3,6 +3,7 @@ import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { AIPromptFilter } from "./AIPromptFilter";
 import { AIPromptTable } from "./AIPromptTable";
 import { DeletePromptDialog } from "./DeletePromptDialog";
 import { AIPrompt } from "@/types/ai-prompt";
@@ -18,17 +19,37 @@ export const AIPromptManager = ({ activeGenerationModel }: AIPromptManagerProps)
   const [editedContent, setEditedContent] = useState("");
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [selectedPromptId, setSelectedPromptId] = useState<number | null>(null);
+  const [selectedModel, setSelectedModel] = useState<string>("all");
 
   const { data: aiPrompts, isLoading } = useQuery({
-    queryKey: ["aiPrompts"],
+    queryKey: ["aiPrompts", selectedModel],
     queryFn: async () => {
-      const { data, error } = await supabase
+      let query = supabase
         .from("ai_prompts")
         .select("*")
         .order("id");
       
+      if (selectedModel && selectedModel !== "all") {
+        query = query.eq("ai_model", selectedModel);
+      }
+      
+      const { data, error } = await query;
       if (error) throw error;
       return data as AIPrompt[];
+    },
+  });
+
+  const { data: uniqueModels } = useQuery({
+    queryKey: ["uniqueAiModels"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("ai_prompts")
+        .select("ai_model");
+      
+      if (error) throw error;
+      
+      const uniqueModelsSet = new Set(data.map(item => item.ai_model));
+      return Array.from(uniqueModelsSet);
     },
   });
 
@@ -114,6 +135,12 @@ export const AIPromptManager = ({ activeGenerationModel }: AIPromptManagerProps)
 
   return (
     <div className="space-y-6">
+      <AIPromptFilter
+        selectedModel={selectedModel}
+        uniqueModels={uniqueModels}
+        onModelChange={setSelectedModel}
+      />
+
       <AIPromptTable
         prompts={aiPrompts || []}
         editingId={editingId}
@@ -134,4 +161,3 @@ export const AIPromptManager = ({ activeGenerationModel }: AIPromptManagerProps)
     </div>
   );
 };
-
