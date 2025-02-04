@@ -95,7 +95,8 @@ const EditReferenceDescription = () => {
         body: { 
           referenceId: numericId,
           brand,
-          reference_name: referenceName
+          reference_name: referenceName,
+          activeModel: activeGenerationModel
         }
       });
       if (error) throw error;
@@ -132,7 +133,8 @@ const EditReferenceDescription = () => {
   return (
     <div className="min-h-screen bg-gray-50">
       <PageHeaderWithModel 
-        activeModel={activeGenerationModel} 
+        activeModel={activeGenerationModel}
+        onModelChange={setActiveGenerationModel}
         title="Edit Reference Description"
       />
       <div className="container mx-auto pt-24 pb-12">

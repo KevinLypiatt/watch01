@@ -1,3 +1,4 @@
+
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.7.1';
@@ -20,38 +21,38 @@ serve(async (req) => {
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     );
 
-    const { referenceId, generateAll, brand, reference_name } = await req.json();
+    const { referenceId, generateAll, brand, reference_name, activeModel } = await req.json();
+    console.log('Active model:', activeModel);
     
-    // Get both the system prompt and style guide from ai_prompts table
+    // Get prompts based on active model
     const { data: prompts, error: promptsError } = await supabaseClient
       .from('ai_prompts')
       .select('*')
       .eq('purpose', 'reference')
-      .eq('ai_model', 'claude-3-opus-20240229');
+      .eq('ai_model', activeModel);
 
     if (promptsError) {
       throw new Error(`Error fetching prompts: ${promptsError.message}`);
     }
 
-    if (!prompts || prompts.length < 2) {
+    if (!prompts || prompts.length === 0) {
       throw new Error('Required prompts not found in the database');
     }
 
     const systemPrompt = prompts.find(p => p.name === 'System Prompt')?.content;
     const styleGuide = prompts.find(p => p.name === 'Style Guide')?.content;
+    const userPrompt = activeModel.startsWith('gpt') ? 
+      prompts.find(p => p.name === 'User Prompt')?.content : 
+      null;
 
-    if (!systemPrompt || !styleGuide) {
+    if (!systemPrompt || !styleGuide || (activeModel.startsWith('gpt') && !userPrompt)) {
       throw new Error('Missing required prompts in the database');
     }
 
-    console.log('System prompt loaded:', systemPrompt);
-    console.log('Style guide loaded:', styleGuide);
+    // Function to generate description using Claude
+    async function generateWithClaude(reference: any) {
+      console.log('Generating description with Claude for reference:', reference);
 
-    // Function to generate description for a single reference
-    async function generateDescription(reference: any) {
-      console.log('Generating description for reference:', reference);
-
-      // Construct the complete prompt by concatenating system prompt, style guide, and reference details
       const prompt = `${systemPrompt}
 
 Style Guide:
@@ -82,26 +83,65 @@ Reference Name: ${reference.reference_name}`;
       });
 
       const data = await response.json();
-      
       if (!response.ok) {
         console.error('Claude API error:', data);
         throw new Error(`Claude API error: ${data.error?.message || 'Unknown error'}`);
       }
+      return data.content[0].text;
+    }
 
-      const generatedDescription = data.content[0].text;
-      console.log('Generated description:', generatedDescription);
+    // Function to generate description using GPT
+    async function generateWithGPT(reference: any) {
+      console.log('Generating description with GPT for reference:', reference);
+
+      const systemMessage = `${systemPrompt}\n\nStyle Guide:\n${styleGuide}`;
+      const userMessage = `${userPrompt}\n\nBrand: ${reference.brand}\nReference Name: ${reference.reference_name}`;
+
+      console.log('System message:', systemMessage);
+      console.log('User message:', userMessage);
+
+      const response = await fetch('https://api.openai.com/v1/chat/completions', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${Deno.env.get('OPENAI_API_KEY')}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          model: activeModel,
+          messages: [
+            { role: 'system', content: systemMessage },
+            { role: 'user', content: userMessage }
+          ],
+        }),
+      });
+
+      const data = await response.json();
+      if (!response.ok) {
+        console.error('GPT API error:', data);
+        throw new Error(`GPT API error: ${data.error?.message || 'Unknown error'}`);
+      }
+      return data.choices[0].message.content;
+    }
+
+    // Function to generate description based on active model
+    async function generateDescription(reference: any) {
+      console.log('Generating description for reference:', reference);
+      
+      const description = activeModel === 'claude-3-opus-20240229' ?
+        await generateWithClaude(reference) :
+        await generateWithGPT(reference);
 
       // Only update the database if we have a reference ID
       if (reference.reference_id) {
         const { error: updateError } = await supabaseClient
           .from('reference_descriptions')
-          .update({ reference_description: generatedDescription })
+          .update({ reference_description: description })
           .eq('reference_id', reference.reference_id);
 
         if (updateError) throw updateError;
       }
       
-      return generatedDescription;
+      return description;
     }
 
     if (generateAll) {
