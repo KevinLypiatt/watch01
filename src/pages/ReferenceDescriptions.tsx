@@ -14,6 +14,11 @@ const ReferenceDescriptions = () => {
   const [brandInput, setBrandInput] = useState('');
   const [referenceInput, setReferenceInput] = useState('');
   const [searchInput, setSearchInput] = useState('');
+  const [activeFilters, setActiveFilters] = useState({
+    brand: '',
+    reference: '',
+    search: ''
+  });
   const [activeGenerationModel, setActiveGenerationModel] = useState<string>(() => {
     const saved = localStorage.getItem("activeGenerationModel");
     return saved || "claude-3-opus-20240229";
@@ -24,21 +29,21 @@ const ReferenceDescriptions = () => {
   }, [activeGenerationModel]);
 
   const { data: references = [], refetch } = useQuery({
-    queryKey: ['references', sortColumn, sortDirection, brandInput, referenceInput, searchInput],
+    queryKey: ['references', sortColumn, sortDirection, activeFilters.brand, activeFilters.reference, activeFilters.search],
     queryFn: async () => {
       let query = supabase
         .from('reference_descriptions')
         .select('*')
         .order(sortColumn, { ascending: sortDirection === 'asc' });
       
-      if (brandInput) {
-        query = query.ilike('brand', `%${brandInput}%`);
+      if (activeFilters.brand) {
+        query = query.ilike('brand', `%${activeFilters.brand}%`);
       }
-      if (referenceInput) {
-        query = query.ilike('reference_name', `%${referenceInput}%`);
+      if (activeFilters.reference) {
+        query = query.ilike('reference_name', `%${activeFilters.reference}%`);
       }
-      if (searchInput) {
-        query = query.or(`brand.ilike.%${searchInput}%,reference_name.ilike.%${searchInput}%,reference_description.ilike.%${searchInput}%`);
+      if (activeFilters.search) {
+        query = query.or(`brand.ilike.%${activeFilters.search}%,reference_name.ilike.%${activeFilters.search}%,reference_description.ilike.%${activeFilters.search}%`);
       }
 
       const { data, error } = await query;
@@ -71,7 +76,11 @@ const ReferenceDescriptions = () => {
   };
 
   const handleSearch = () => {
-    refetch();
+    setActiveFilters({
+      brand: brandInput,
+      reference: referenceInput,
+      search: searchInput
+    });
   };
 
   const generateMutation = useGenerateDescriptions();

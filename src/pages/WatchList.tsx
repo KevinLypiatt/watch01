@@ -13,6 +13,11 @@ const WatchList = () => {
   const [brandInput, setBrandInput] = useState('');
   const [modelInput, setModelInput] = useState('');
   const [searchInput, setSearchInput] = useState('');
+  const [activeFilters, setActiveFilters] = useState({
+    brand: '',
+    model: '',
+    search: ''
+  });
   const [activeGenerationModel, setActiveGenerationModel] = useState<string>(() => {
     const saved = localStorage.getItem("activeGenerationModel");
     return saved || "claude-3-opus-20240229";
@@ -23,21 +28,21 @@ const WatchList = () => {
   }, [activeGenerationModel]);
 
   const { data: watches = [], refetch } = useQuery({
-    queryKey: ['watches', sortColumn, sortDirection, brandInput, modelInput, searchInput],
+    queryKey: ['watches', sortColumn, sortDirection, activeFilters.brand, activeFilters.model, activeFilters.search],
     queryFn: async () => {
       let query = supabase
         .from('watches')
         .select('*')
         .order(sortColumn, { ascending: sortDirection === 'asc' });
 
-      if (brandInput) {
-        query = query.ilike('brand', `%${brandInput}%`);
+      if (activeFilters.brand) {
+        query = query.ilike('brand', `%${activeFilters.brand}%`);
       }
-      if (modelInput) {
-        query = query.ilike('model_reference', `%${modelInput}%`);
+      if (activeFilters.model) {
+        query = query.ilike('model_reference', `%${activeFilters.model}%`);
       }
-      if (searchInput) {
-        query = query.or(`brand.ilike.%${searchInput}%,model_name.ilike.%${searchInput}%,model_reference.ilike.%${searchInput}%,description.ilike.%${searchInput}%`);
+      if (activeFilters.search) {
+        query = query.or(`brand.ilike.%${activeFilters.search}%,model_name.ilike.%${activeFilters.search}%,model_reference.ilike.%${activeFilters.search}%,description.ilike.%${activeFilters.search}%`);
       }
       
       const { data, error } = await query;
@@ -70,7 +75,11 @@ const WatchList = () => {
   };
 
   const handleSearch = () => {
-    refetch();
+    setActiveFilters({
+      brand: brandInput,
+      model: modelInput,
+      search: searchInput
+    });
   };
 
   return (
