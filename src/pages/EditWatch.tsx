@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
@@ -6,7 +7,7 @@ import { WatchForm } from "@/components/watch/WatchForm";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { ArrowLeft } from "lucide-react";
-import { PageHeader } from "@/components/PageHeader";
+import { PageHeaderWithModel } from "@/components/shared/PageHeaderWithModel";
 
 const EditWatch = () => {
   const { id } = useParams();
@@ -14,6 +15,14 @@ const EditWatch = () => {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [isGenerating, setIsGenerating] = useState(false);
+  const [activeGenerationModel, setActiveGenerationModel] = useState<string>(() => {
+    const saved = localStorage.getItem("activeGenerationModel");
+    return saved || "claude-3-opus-20240229";
+  });
+  
+  useEffect(() => {
+    localStorage.setItem("activeGenerationModel", activeGenerationModel);
+  }, [activeGenerationModel]);
   
   const watchId = id ? parseInt(id) : undefined;
 
@@ -134,7 +143,7 @@ const EditWatch = () => {
 
   return (
     <div>
-      <PageHeader />
+      <PageHeaderWithModel activeModel={activeGenerationModel} title="Edit Watch" />
       <div className="container mx-auto py-20">
         <Button
           variant="ghost"
@@ -144,7 +153,6 @@ const EditWatch = () => {
           <ArrowLeft className="mr-2" />
           Back to Watch List
         </Button>
-        <h1 className="text-2xl font-bold mb-6">Edit Watch</h1>
         
         <WatchForm 
           formData={formData}
